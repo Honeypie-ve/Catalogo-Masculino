@@ -59,6 +59,12 @@
     .font-editorial {
       font-family: 'Cormorant Garamond', Georgia, serif;
     }
+    /* CORRECCIÓN ANTI-ZOOM MÓVIL: Forzamos 16px en todos los inputs y selects en pantallas táctiles */
+    @media (max-width: 768px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -1338,7 +1344,6 @@
       showToast('Textos de portada actualizados temporalmente');
     }
 
-    // FUNCIÓN AUTOMÁTICA SEGURA CON TOKEN GUARDADO EN EL NAVEGADOR
     async function publishToGitHub() {
       let githubToken = localStorage.getItem('honeypie_gh_token');
       if (!githubToken) {
@@ -1390,7 +1395,7 @@
         } else {
           const errData = await putResponse.json();
           alert("Error al sincronizar con GitHub: " + (errData.message || 'Verifica tus datos'));
-          localStorage.removeItem('honeypie_gh_token'); // Si falla, borramos el token guardado para pedirlo de nuevo
+          localStorage.removeItem('honeypie_gh_token');
         }
       } catch (err) {
         console.error(err);
