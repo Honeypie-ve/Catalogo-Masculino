@@ -96,16 +96,14 @@
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16 sm:h-20">
         
-        <!-- Brand Logo -->
-        <div class="flex items-center gap-3 cursor-pointer select-none" onclick="handleLogoClick()">
-          <div>
-            <h1 class="font-editorial text-xl sm:text-3xl tracking-[0.18em] font-medium text-charcoal leading-none">
-              HONEYPIE
-            </h1>
-            <p class="text-[8px] sm:text-[9px] tracking-[0.28em] text-stone uppercase mt-1">
-              Catálogo Masculino
-            </p>
-          </div>
+        <!-- Brand Logo (Subtítulo perfectamente centrado respecto a HONEYPIE) -->
+        <div class="inline-flex flex-col items-center text-center cursor-pointer select-none" onclick="handleLogoClick()">
+          <h1 class="font-editorial text-xl sm:text-3xl tracking-[0.18em] mr-[-0.18em] font-medium text-charcoal leading-none">
+            HONEYPIE
+          </h1>
+          <p class="text-[8px] sm:text-[9px] tracking-[0.28em] mr-[-0.28em] text-stone uppercase mt-1.5">
+            Catálogo Masculino
+          </p>
         </div>
 
         <!-- Acciones Header -->
@@ -151,7 +149,7 @@
               Elegancia y distinción en cada detalle.
             </h2>
             <p id="hero-subtitle-display" class="text-xs sm:text-sm text-stone font-light mt-2 leading-relaxed">
-              Explora nuestra selección destacada o agrégalas directamente tu carrito.
+              Explora nuestra selección destacada o agrégalas directamente a tu carrito.
             </p>
           </div>
 
@@ -212,12 +210,12 @@
             </div>
           </div>
 
-          <!-- Buscador por palabras clave corregido -->
+          <!-- Buscador por palabras clave -->
           <div class="relative flex-1 sm:max-w-sm">
             <input 
               type="text" 
               id="search-input" 
-              placeholder="Buscar pieza o palabra (ej. reljs, relojes...)" 
+              placeholder="Buscar pieza o palabra (ej. relojes, casio...)" 
               oninput="applyFilters()"
               class="w-full bg-white border border-[#E9D4C3] pl-9 pr-8 py-2.5 text-xs text-charcoal placeholder-stone focus:outline-none focus:border-stone shadow-xs"
             />
@@ -257,7 +255,6 @@
 
   <!-- Banner de sugerencias / corrección de tipeo -->
   <div id="search-suggestion-bar" class="hidden bg-stone/10 border-b border-[#E9D4C3] px-4 py-2 text-center text-xs text-charcoal">
-    <!-- Renderizado dinámico de sugerencia -->
   </div>
 
   <!-- Main Catalog Grid -->
@@ -677,7 +674,7 @@
 
       let featuredProducts = products.filter(p => p.heroFeatured && p.images && p.images.length > 0);
       
-      // PRIORIDAD ESTRICTA POR CATEGORÍA DE RELOJES (Oculta en código, sin texto visible)
+      // Prioridad oculta por categoría de relojes
       const heroWatches = featuredProducts.filter(p => p.category && p.category.toLowerCase().includes('reloj'));
       const heroOthers = featuredProducts.filter(p => !p.category || !p.category.toLowerCase().includes('reloj'));
       featuredProducts = [...heroWatches, ...heroOthers];
@@ -976,8 +973,6 @@
         filtered.sort((a, b) => a.price - b.price);
       } else if (sortBy === 'price-desc' || !sortBy) {
         filtered.sort((a, b) => b.price - a.price);
-      } else if (sortBy === 'featured') {
-        // Orden original
       }
 
       renderCatalog(filtered);
