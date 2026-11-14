@@ -382,6 +382,8 @@
           <p class="text-xs text-stone">Personaliza tu WhatsApp y marca productos destacados para el Hero.</p>
         </div>
         <div class="flex items-center gap-2">
+          <!-- BOTÓN AUTOMÁTICO A GITHUB -->
+          <button onclick="publishToGitHub()" class="text-[11px] uppercase tracking-wider font-semibold border border-accentOrange bg-accentOrange text-white px-3.5 py-1.5 hover:bg-[#9d4313] transition-colors cursor-pointer shadow-xs">🚀 Publicar en GitHub</button>
           <button onclick="exportCatalogJSON()" class="text-[11px] uppercase tracking-wider border border-[#E9D4C3] px-3 py-1.5 bg-white hover:border-charcoal transition-colors cursor-pointer">Exportar JSON</button>
           <label class="text-[11px] uppercase tracking-wider border border-[#E9D4C3] px-3 py-1.5 bg-white hover:border-charcoal transition-colors cursor-pointer">
             Importar JSON
@@ -627,7 +629,6 @@
         console.log("Usando catálogo por defecto o local.");
       }
 
-      // Comprobar si hay un carrito compartido en la URL (?cart=...)
       checkSharedCartParam();
 
       renderHero();
@@ -638,21 +639,17 @@
       checkURLHash();
     }
 
-    // Lee los parámetros de la URL para cargar el carrito compartido automáticamente
     function checkSharedCartParam() {
       const urlParams = new URLSearchParams(window.location.search);
       const cartParam = urlParams.get('cart');
       if (cartParam) {
         try {
-          // Decodifica el JSON comprimido en base64 o texto plano
           const decodedCart = JSON.parse(decodeURIComponent(atob(cartParam)));
           if (Array.isArray(decodedCart) && decodedCart.length > 0) {
             cart = decodedCart;
             persistCart();
             showToast('¡Carrito compartido cargado con éxito!');
-            // Limpia la URL para que no recargue el carrito al refrescar la página manualmente después
             window.history.replaceState({}, document.title, window.location.pathname);
-            // Abre el cajón del carrito automáticamente para que lo vea
             setTimeout(() => toggleCartDrawer(true), 400);
           }
         } catch (e) {
@@ -1292,11 +1289,8 @@
       }
     }
 
-    // NUEVA FUNCIÓN: Genera un enlace personalizado de la web con el carrito integrado
     function shareCartLink() {
       if (cart.length === 0) return;
-      
-      // Codifica los datos del carrito en Base64 dentro de la URL
       const cartJson = JSON.stringify(cart);
       const encodedCart = btoa(encodeURIComponent(cartJson));
       const shareableUrl = `${window.location.origin + window.location.pathname}?cart=${encodedCart}`;
@@ -1342,6 +1336,66 @@
       heroSettings.subtitle = document.getElementById('admin-hero-subtitle').value.trim();
       renderHero();
       showToast('Textos de portada actualizados temporalmente');
+    }
+
+    // FUNCIÓN AUTOMÁTICA SEGURA CON TOKEN GUARDADO EN EL NAVEGADOR
+    async function publishToGitHub() {
+      let githubToken = localStorage.getItem('honeypie_gh_token');
+      if (!githubToken) {
+        githubToken = prompt("Introduce tu Personal Access Token de GitHub (solo la primera vez):");
+        if (!githubToken) return;
+        localStorage.setItem('honeypie_gh_token', githubToken.trim());
+      }
+
+      const repoOwner = "Honeypie-ve"; 
+      const repoName = "Catalogo-Masculino"; 
+      const filePath = "honeypie-backup.json";
+
+      const data = { products, sellerWhatsApp, heroSettings };
+      const jsonContent = JSON.stringify(data, null, 2);
+      const base64Content = btoa(unescape(encodeURIComponent(jsonContent)));
+
+      showToast('Sincronizando con GitHub...');
+
+      try {
+        const getResponse = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`, {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        let fileSha = '';
+        if (getResponse.ok) {
+          const fileData = await getResponse.json();
+          fileSha = fileData.sha;
+        }
+
+        const putResponse = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json'
+          },
+          body: JSON.stringify({
+            message: 'Actualización automática de catálogo desde Honeypie Admin',
+            content: base64Content,
+            sha: fileSha
+          })
+        });
+
+        if (putResponse.ok) {
+          showToast('¡Catálogo publicado en GitHub con éxito!');
+        } else {
+          const errData = await putResponse.json();
+          alert("Error al sincronizar con GitHub: " + (errData.message || 'Verifica tus datos'));
+          localStorage.removeItem('honeypie_gh_token'); // Si falla, borramos el token guardado para pedirlo de nuevo
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error de red al intentar conectar con GitHub.");
+      }
     }
 
     function handleMultipleImagesUpload(event) {
@@ -1398,7 +1452,6 @@
       renderAdminProductList();
       applyFilters();
       renderHero();
-      exportCatalogJSONAutomatically();
     }
 
     function editProduct(id) {
@@ -1436,7 +1489,6 @@
       applyFilters();
       renderHero();
       showToast('Eliminado');
-      exportCatalogJSONAutomatically();
     }
 
     function renderAdminProductList() {
@@ -1464,7 +1516,6 @@
       applyFilters();
       renderHero();
       showToast('Catálogo restaurado');
-      exportCatalogJSONAutomatically();
     }
 
     function exportCatalogJSON() {
@@ -1474,16 +1525,6 @@
       a.href = URL.createObjectURL(blob);
       a.download = `honeypie-backup.json`;
       a.click();
-    }
-
-    function exportCatalogJSONAutomatically() {
-      const data = { products, sellerWhatsApp, heroSettings };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `honeypie-backup.json`;
-      a.click();
-      showToast('¡Descargado honeypie-backup.json actualizado! Súbelo a GitHub.');
     }
 
     function importCatalogJSON(event) {
