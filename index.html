@@ -362,12 +362,12 @@
           <span>Enviar Pedido a la Tienda</span>
         </button>
 
-        <!-- NUEVO BOTÓN: Enviar carrito a otra persona para que lo pague -->
-        <button onclick="shareCartWithSomeone()" class="w-full bg-charcoal hover:bg-stone text-white py-2.5 px-4 text-[11px] uppercase tracking-[0.16em] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm">
+        <!-- BOTÓN: Generar link para compartir carrito -->
+        <button onclick="shareCartLink()" class="w-full bg-charcoal hover:bg-stone text-white py-2.5 px-4 text-[11px] uppercase tracking-[0.16em] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm">
           <svg class="w-4 h-4 text-[#E9D4C3]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684m0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
-          <span>Enviar carrito a otra persona ↗</span>
+          <span>Compartir carrito ↗</span>
         </button>
       </div>
     </div>
@@ -627,12 +627,38 @@
         console.log("Usando catálogo por defecto o local.");
       }
 
+      // Comprobar si hay un carrito compartido en la URL (?cart=...)
+      checkSharedCartParam();
+
       renderHero();
       populatePriceSelects();
       renderCategoryDropdown();
       applyFilters();
       updateCartUI();
       checkURLHash();
+    }
+
+    // Lee los parámetros de la URL para cargar el carrito compartido automáticamente
+    function checkSharedCartParam() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const cartParam = urlParams.get('cart');
+      if (cartParam) {
+        try {
+          // Decodifica el JSON comprimido en base64 o texto plano
+          const decodedCart = JSON.parse(decodeURIComponent(atob(cartParam)));
+          if (Array.isArray(decodedCart) && decodedCart.length > 0) {
+            cart = decodedCart;
+            persistCart();
+            showToast('¡Carrito compartido cargado con éxito!');
+            // Limpia la URL para que no recargue el carrito al refrescar la página manualmente después
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // Abre el cajón del carrito automáticamente para que lo vea
+            setTimeout(() => toggleCartDrawer(true), 400);
+          }
+        } catch (e) {
+          console.log("Error al decodificar el carrito compartido:", e);
+        }
+      }
     }
 
     function handleLogoClick() {
@@ -1145,7 +1171,7 @@
       persistCart();
       applyFilters();
       renderHero();
-      showToast('Agregado a tu carrito');
+      showToast('Agregado al carrito');
     }
 
     function updateCartQuantity(productId, delta) {
@@ -1266,26 +1292,27 @@
       }
     }
 
-    // NUEVA FUNCIÓN: Compartir el carrito con otra persona para que lo pague
-    function shareCartWithSomeone() {
+    // NUEVA FUNCIÓN: Genera un enlace personalizado de la web con el carrito integrado
+    function shareCartLink() {
       if (cart.length === 0) return;
-      const customerName = document.getElementById('customer-name').value.trim();
       
-      let message = `¡Hola! Armé este carrito de compras en *HONEYPIE* y necesito que me apoyes con el pago por favor:\n\n`;
-      if (customerName) message += `*A nombre de:* ${customerName}\n`;
-      
-      let total = 0;
-      cart.forEach((item, index) => {
-        const product = products.find(p => p.id === item.id);
-        const sub = product.price * item.quantity;
-        total += sub;
-        message += `${index + 1}. *${product.name}* (Cant: ${item.quantity}) - $${sub.toFixed(2)}\n`;
-      });
-      
-      message += `\n*Monto Total a Pagar:* $${total.toFixed(2)} USD\n\n¿Me ayudas con esto? ¡Gracias!`;
+      // Codifica los datos del carrito en Base64 dentro de la URL
+      const cartJson = JSON.stringify(cart);
+      const encodedCart = btoa(encodeURIComponent(cartJson));
+      const shareableUrl = `${window.location.origin + window.location.pathname}?cart=${encodedCart}`;
 
-      if (confirm("¿Quieres abrir WhatsApp para enviarle este carrito a otra persona?")) {
-        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+      if (navigator.share) {
+        navigator.share({
+          title: 'Mi Carrito en Honeypie',
+          text: 'Aquí tienes mi selección de piezas en Honeypie para revisar o procesar el pago:',
+          url: shareableUrl
+        }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(shareableUrl).then(() => {
+          showToast('¡Enlace del carrito copiado al portapapeles!');
+        }).catch(() => {
+          prompt("Copia este enlace para compartir tu carrito:", shareableUrl);
+        });
       }
     }
 
