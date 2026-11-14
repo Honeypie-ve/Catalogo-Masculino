@@ -47,6 +47,10 @@
     }
   </script>
   <style>
+    /* Elimina el zoom por doble toque y acelera la respuesta táctil en móviles */
+    html {
+      touch-action: manipulation;
+    }
     body {
       background-color: #FFFFFF;
       color: #13273F;
@@ -96,7 +100,7 @@
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16 sm:h-20">
         
-        <!-- Brand Logo (Subtítulo perfectamente centrado respecto a HONEYPIE) -->
+        <!-- Brand Logo -->
         <div class="inline-flex flex-col items-center text-center cursor-pointer select-none" onclick="handleLogoClick()">
           <h1 class="font-editorial text-xl sm:text-3xl tracking-[0.18em] mr-[-0.18em] font-medium text-charcoal leading-none">
             HONEYPIE
