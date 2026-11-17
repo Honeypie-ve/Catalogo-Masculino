@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Honeypie — Catálogo Masculino</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- html2pdf.js para exportar PDFs limpios de una sola página -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -92,19 +94,25 @@
     }
     @media print {
       body * {
-        visibility: hidden;
+        visibility: hidden !important;
       }
       #invoice-print-area, #invoice-print-area * {
-        visibility: visible;
+        visibility: visible !important;
       }
       #invoice-print-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 20px;
-        background: white;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 15px !important;
+        background: white !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+      @page {
+        size: portrait;
+        margin: 10mm;
       }
     }
   </style>
@@ -335,7 +343,7 @@
     </div>
   </div>
 
-  <!-- LIGHTBOX MODAL (CON SOPORTE DE GESTOS SWIPE TÁCTILES) -->
+  <!-- LIGHTBOX MODAL -->
   <div id="lightbox-modal" class="fixed inset-0 z-[70] hidden bg-black/95 flex items-center justify-center p-4 select-none" onclick="closeLightbox()">
     <button onclick="closeLightbox()" class="absolute top-5 right-5 sm:top-6 sm:right-6 w-11 h-11 sm:w-12 sm:h-12 bg-white/10 hover:bg-white text-white hover:text-charcoal border border-white/20 flex items-center justify-center text-xl sm:text-2xl font-light transition-colors z-[80] cursor-pointer rounded-lg shadow-2xl" title="Cerrar (Esc)">
       ✕
@@ -604,26 +612,26 @@
 
         <!-- Vista Previa de la Factura -->
         <div id="invoice-preview-section" class="hidden space-y-4">
-          <div id="invoice-print-area" class="bg-white border-2 border-charcoal p-8 space-y-6 shadow-md text-charcoal">
-            <div class="flex justify-between items-start border-b-2 border-charcoal pb-6">
+          <div id="invoice-print-area" class="bg-white border border-[#E9D4C3] p-6 space-y-5 shadow-sm text-charcoal max-w-xl mx-auto">
+            <div class="flex justify-between items-start border-b border-charcoal pb-4">
               <div>
-                <h2 class="font-editorial text-3xl font-bold tracking-widest leading-none">HONEYPIE</h2>
-                <p class="text-[9px] uppercase tracking-[0.25em] text-stone mt-1">Catálogo Masculino &bull; Comprobante de Venta</p>
+                <h2 class="font-editorial text-2xl font-bold tracking-widest leading-none">HONEYPIE</h2>
+                <p class="text-[9px] uppercase tracking-[0.2em] text-stone mt-1">Catálogo Masculino &bull; Comprobante de Venta</p>
               </div>
               <div class="text-right text-xs text-stone space-y-0.5">
                 <p class="font-bold text-charcoal" id="inv-view-code">Factura #HP-0000</p>
                 <p id="inv-view-date">Fecha: 00/00/2026</p>
-                <p class="text-[10px] italic">Tasa BCV Oficial</p>
+                <p class="text-[9px] italic">Tasa BCV Oficial</p>
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 text-xs bg-[#FAF8F5] p-4 border border-[#E9D4C3]">
+            <div class="grid grid-cols-2 gap-3 text-xs bg-[#FAF8F5] p-3 border border-[#E9D4C3]">
               <div>
-                <span class="text-[10px] uppercase text-stone block font-semibold">Cliente:</span>
+                <span class="text-[9px] uppercase text-stone block font-semibold">Cliente:</span>
                 <p id="inv-view-client" class="font-medium text-charcoal text-sm">-</p>
               </div>
               <div>
-                <span class="text-[10px] uppercase text-stone block font-semibold">Condición / Envío:</span>
+                <span class="text-[9px] uppercase text-stone block font-semibold">Condición / Envío:</span>
                 <p id="inv-view-note" class="text-charcoal">-</p>
               </div>
             </div>
@@ -631,11 +639,11 @@
             <div>
               <table class="w-full text-xs text-left">
                 <thead>
-                  <tr class="border-b border-charcoal text-stone uppercase tracking-wider text-[10px]">
-                    <th class="py-2">Pieza / Artículo</th>
-                    <th class="py-2 text-center">Cant.</th>
-                    <th class="py-2 text-right">Precio Unit.</th>
-                    <th class="py-2 text-right">Subtotal</th>
+                  <tr class="border-b border-charcoal text-stone uppercase tracking-wider text-[9px]">
+                    <th class="py-1.5">Pieza / Artículo</th>
+                    <th class="py-1.5 text-center">Cant.</th>
+                    <th class="py-1.5 text-right">Precio Unit.</th>
+                    <th class="py-1.5 text-right">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody id="inv-view-table-body" class="divide-y divide-[#E9D4C3]">
@@ -644,24 +652,24 @@
               </table>
             </div>
 
-            <div class="flex justify-end pt-4 border-t-2 border-charcoal">
-              <div class="w-64 space-y-2 text-xs">
-                <div class="flex justify-between font-bold text-sm text-charcoal pt-1 border-t border-charcoal">
+            <div class="flex justify-end pt-3 border-t border-charcoal">
+              <div class="w-56 space-y-1 text-xs">
+                <div class="flex justify-between font-bold text-sm text-charcoal pt-1">
                   <span>Total Final:</span>
                   <span id="inv-view-total">$0.00 USD</span>
                 </div>
               </div>
             </div>
 
-            <div class="pt-8 text-center text-[10px] text-stone border-t border-[#E9D4C3]">
+            <div class="pt-6 text-center text-[9px] text-stone border-t border-[#E9D4C3]">
               <p>¡Gracias por tu compra en Honeypie!</p>
               <p class="mt-0.5">Este documento digital valida los artículos y montos acordados.</p>
             </div>
           </div>
 
           <div class="flex flex-wrap gap-3">
-            <button onclick="printInvoice()" class="flex-1 bg-charcoal hover:bg-stone text-white py-3 rounded-lg text-xs uppercase tracking-wider font-medium cursor-pointer">🖨️ Imprimir / Guardar PDF</button>
-            <button onclick="shareInvoiceWhatsApp()" class="flex-1 bg-whatsapp hover:bg-whatsappDark text-white py-3 rounded-lg text-xs uppercase tracking-wider font-medium cursor-pointer">💬 Compartir Factura por WhatsApp</button>
+            <button onclick="downloadInvoicePDF()" class="flex-1 bg-charcoal hover:bg-stone text-white py-3 rounded-lg text-xs uppercase tracking-wider font-medium cursor-pointer shadow-sm">📥 Descargar PDF Único</button>
+            <button onclick="shareInvoicePDFWhatsApp()" class="flex-1 bg-whatsapp hover:bg-whatsappDark text-white py-3 rounded-lg text-xs uppercase tracking-wider font-medium cursor-pointer shadow-sm">💬 Enviar PDF por WhatsApp</button>
             <button onclick="resetInvoiceForm()" class="px-4 py-3 border border-[#E9D4C3] bg-white text-stone text-xs uppercase rounded-lg hover:border-charcoal cursor-pointer">Crear Otra</button>
           </div>
         </div>
@@ -982,7 +990,6 @@
       `;
 
       if (!isHeroInitialized) {
-        // DUPLICAMOS LOS PRODUCTOS TRES VECES PARA LOGRAR UN EFECTO DE LOOP INFINITO REAL Y SUAVE
         const tripleProducts = [...featuredProducts, ...featuredProducts, ...featuredProducts];
         
         recuadrosContainer.innerHTML = tripleProducts.map((prod, index) => {
@@ -1019,7 +1026,6 @@
 
         isHeroInitialized = true;
         
-        // Situar el scroll exactamente en el bloque del medio para permitir desplazamiento infinito en ambos sentidos
         setTimeout(() => {
           if (recuadrosContainer.scrollWidth > 0) {
             recuadrosContainer.scrollLeft = recuadrosContainer.scrollWidth / 3;
@@ -1030,7 +1036,6 @@
       startHeroAutoPlay();
     }
 
-    // Lógica para mantener el carrusel infinito sin topes bruscos
     function handleInfiniteCarouselScroll(el) {
       const maxScroll = el.scrollWidth;
       const third = maxScroll / 3;
@@ -1473,7 +1478,6 @@
       document.getElementById('lightbox-modal').classList.add('hidden');
     }
 
-    // GESTOS TÁCTILES SWIPE PARA EL LIGHTBOX
     function initLightboxSwipeGestures() {
       const lightboxModal = document.getElementById('lightbox-modal');
       if (!lightboxModal) return;
@@ -1489,13 +1493,11 @@
     }
 
     function handleSwipeGesture() {
-      const threshold = 50; // Mínimo de píxeles para reconocer el gesto
+      const threshold = 50;
       if (touchendX < touchstartX - threshold) {
-        // Deslizar a la izquierda -> Siguiente imagen
         nextLightboxImage();
       }
       if (touchendX > touchstartX + threshold) {
-        // Deslizar a la derecha -> Imagen anterior
         prevLightboxImage();
       }
     }
@@ -1964,23 +1966,46 @@
       activeInvoiceData = null;
     }
 
-    function printInvoice() {
-      window.print();
+    // DESCARGAR PDF CON RETARDO DE RENDERIZADO PARA EVITAR PÁGINAS BLANCAS
+    function downloadInvoicePDF() {
+      const element = document.getElementById('invoice-print-area');
+      const opt = {
+        margin:       10,
+        filename:     `Factura_${activeInvoiceData ? activeInvoiceData.code : 'Honeypie'}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      showToast('Generando PDF...');
+
+      setTimeout(() => {
+        html2pdf().from(element).set(opt).save().then(() => {
+          showToast('¡PDF descargado con éxito!');
+        });
+      }, 300);
     }
 
-    function shareInvoiceWhatsApp() {
+    // COMPARTIR FACTURA POR WHATSAPP (DESCARGA EL PDF Y GUÍA AL USUARIO)
+    function shareInvoicePDFWhatsApp() {
       if (!activeInvoiceData) return;
       const cleanPhone = sellerWhatsApp.replace(/\D/g, '');
-      const encoded = btoa(encodeURIComponent(JSON.stringify(activeInvoiceData)));
-      const invoiceUrl = `${window.location.origin + window.location.pathname}?invoice=${encoded}`;
+      
+      // 1. Descargamos el PDF primero para que el usuario lo tenga en su dispositivo
+      downloadInvoicePDF();
 
+      // 2. Preparamos el texto detallado para WhatsApp
       let text = `🧾 *FACTURA DIGITAL HONEYPIE*\n`;
       text += `*Nº:* ${activeInvoiceData.code}\n`;
       text += `*Cliente:* ${activeInvoiceData.client}\n`;
       text += `*Total:* $${activeInvoiceData.total.toFixed(2)} USD\n\n`;
-      text += `Puedes ver tu comprobante oficial en línea aquí:\n${invoiceUrl}`;
+      text += `¡Hola! Adjunto el comprobante en PDF de mi compra en Honeypie.`;
 
-      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+      // 3. Abrimos WhatsApp tras un breve instante y mostramos el aviso
+      setTimeout(() => {
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+        showToast('¡PDF descargado! Adjúntalo en el chat de WhatsApp.');
+      }, 1000);
     }
 
     function requestAdminAccess() {
