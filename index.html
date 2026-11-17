@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Honeypie — Catálogo Masculino</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- html2pdf.js para exportar PDFs limpios de una sola página -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- jsPDF vectorial para generar facturas instantáneas sin congelar teléfonos -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -1966,46 +1966,169 @@
       activeInvoiceData = null;
     }
 
-    // DESCARGAR PDF CON RETARDO DE RENDERIZADO PARA EVITAR PÁGINAS BLANCAS
-    function downloadInvoicePDF() {
-      const element = document.getElementById('invoice-print-area');
-      const opt = {
-        margin:       10,
-        filename:     `Factura_${activeInvoiceData ? activeInvoiceData.code : 'Honeypie'}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
+    // GENERADOR DE PDF VECTORIAL INSTANTÁNEO (0% CONGELAMIENTO EN MÓVILES)
+    function createInvoicePDFDoc() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const inv = activeInvoiceData;
 
-      showToast('Generando PDF...');
+      // Colores corporativos Honeypie
+      const charcoal = [19, 39, 63];
+      const stone = [89, 54, 39];
+      const sand = [233, 212, 195];
 
-      setTimeout(() => {
-        html2pdf().from(element).set(opt).save().then(() => {
-          showToast('¡PDF descargado con éxito!');
-        });
-      }, 300);
+      // Encabezado
+      doc.setFont("times", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(...charcoal);
+      doc.text("HONEYPIE", 20, 25);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...stone);
+      doc.text("CATÁLOGO MASCULINO • COMPROBANTE DE VENTA", 20, 30);
+
+      // Datos de Factura (Derecha)
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(...charcoal);
+      doc.text(`Factura #${inv.code}`, 190, 23, { align: "right" });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...stone);
+      doc.text(`Fecha: ${inv.date}`, 190, 28, { align: "right" });
+      doc.text("Tasa BCV Oficial", 190, 33, { align: "right" });
+
+      // Línea divisoria
+      doc.setDrawColor(...charcoal);
+      doc.setLineWidth(0.5);
+      doc.line(20, 38, 190, 38);
+
+      // Caja de Cliente
+      doc.setFillColor(250, 248, 245);
+      doc.setDrawColor(...sand);
+      doc.rect(20, 44, 170, 18, "FD");
+
+      doc.setFontSize(7);
+      doc.setTextColor(...stone);
+      doc.text("CLIENTE:", 25, 50);
+      doc.text("CONDICIÓN / ENVÍO:", 105, 50);
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...charcoal);
+      doc.text(inv.client, 25, 56);
+
+      doc.setFont("helvetica", "normal");
+      doc.text(inv.note, 105, 56);
+
+      // Cabecera de Tabla
+      let y = 74;
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...stone);
+      doc.text("PIEZA / ARTÍCULO", 20, y);
+      doc.text("CANT.", 125, y, { align: "center" });
+      doc.text("PRECIO UNIT.", 155, y, { align: "right" });
+      doc.text("SUBTOTAL", 190, y, { align: "right" });
+
+      doc.setDrawColor(...charcoal);
+      doc.line(20, y + 2, 190, y + 2);
+      y += 9;
+
+      // Filas de productos
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...charcoal);
+
+      inv.items.forEach(item => {
+        const splitName = doc.splitTextToSize(item.name, 95);
+        doc.text(splitName, 20, y);
+        doc.text(String(item.qty), 125, y, { align: "center" });
+        doc.text(`$${item.price.toFixed(2)}`, 155, y, { align: "right" });
+        doc.setFont("helvetica", "bold");
+        doc.text(`$${item.subtotal.toFixed(2)}`, 190, y, { align: "right" });
+        doc.setFont("helvetica", "normal");
+
+        y += (splitName.length * 5) + 3;
+        doc.setDrawColor(...sand);
+        doc.line(20, y - 2, 190, y - 2);
+        y += 3;
+      });
+
+      // Total Final
+      y += 4;
+      doc.setDrawColor(...charcoal);
+      doc.line(120, y, 190, y);
+      y += 7;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("Total Final:", 120, y);
+      doc.text(`$${inv.total.toFixed(2)} USD`, 190, y, { align: "right" });
+
+      // Pie de página
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...stone);
+      doc.text("¡Gracias por tu compra en Honeypie!", 105, 275, { align: "center" });
+      doc.text("Este documento digital valida los artículos y montos acordados.", 105, 280, { align: "center" });
+
+      return doc;
     }
 
-    // COMPARTIR FACTURA POR WHATSAPP (DESCARGA EL PDF Y GUÍA AL USUARIO)
-    function shareInvoicePDFWhatsApp() {
+    function downloadInvoicePDF() {
+      if (!activeInvoiceData) return;
+      try {
+        const doc = createInvoicePDFDoc();
+        doc.save(`Factura_${activeInvoiceData.code}.pdf`);
+        showToast('¡PDF descargado al instante!');
+      } catch (err) {
+        console.error(err);
+        showToast('Error al generar el PDF');
+      }
+    }
+
+    async function shareInvoicePDFWhatsApp() {
       if (!activeInvoiceData) return;
       const cleanPhone = sellerWhatsApp.replace(/\D/g, '');
-      
-      // 1. Descargamos el PDF primero para que el usuario lo tenga en su dispositivo
-      downloadInvoicePDF();
+      const fileName = `Factura_${activeInvoiceData.code}.pdf`;
 
-      // 2. Preparamos el texto detallado para WhatsApp
       let text = `🧾 *FACTURA DIGITAL HONEYPIE*\n`;
       text += `*Nº:* ${activeInvoiceData.code}\n`;
       text += `*Cliente:* ${activeInvoiceData.client}\n`;
       text += `*Total:* $${activeInvoiceData.total.toFixed(2)} USD\n\n`;
       text += `¡Hola! Adjunto el comprobante en PDF de mi compra en Honeypie.`;
 
-      // 3. Abrimos WhatsApp tras un breve instante y mostramos el aviso
-      setTimeout(() => {
-        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
-        showToast('¡PDF descargado! Adjúntalo en el chat de WhatsApp.');
-      }, 1000);
+      try {
+        const doc = createInvoicePDFDoc();
+        const pdfBlob = doc.output('blob');
+        const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+        // Si el teléfono soporta compartir archivos directamente (Android / iOS modernos)
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          await navigator.share({
+            files: [pdfFile],
+            title: `Factura ${activeInvoiceData.code}`,
+            text: text
+          });
+          return;
+        }
+
+        // Fallback para PC o navegadores antiguos: descarga el PDF y abre el chat
+        doc.save(fileName);
+        showToast('PDF descargado. Abriendo WhatsApp...');
+        setTimeout(() => {
+          window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+        }, 400);
+
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error(err);
+          window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+        }
+      }
     }
 
     function requestAdminAccess() {
