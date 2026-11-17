@@ -161,7 +161,7 @@
             </p>
           </div>
 
-          <!-- Carrusel Horizontal de Productos Destacados -->
+          <!-- Carrusel Horizontal con Bucle al principio -->
           <div>
             <div id="hero-carousel-wrapper" class="relative flex items-center pt-2">
               <button id="hero-prev-btn" onclick="scrollHeroRecuadros('left')" class="absolute -left-3.5 sm:-left-4 z-20 w-8 h-8 rounded-lg bg-charcoal text-[#E9D4C3] hover:bg-stone hover:text-white border border-[#E9D4C3] flex items-center justify-center shadow-md transition-transform hover:scale-110 cursor-pointer hidden" title="Anterior">
@@ -170,7 +170,7 @@
                 </svg>
               </button>
 
-              <div id="hero-recuadros-list" class="flex gap-3 overflow-x-auto no-scrollbar scroll-smooth px-1 py-1 w-full">
+              <div id="hero-recuadros-list" class="flex gap-3 overflow-x-auto no-scrollbar scroll-smooth px-1 py-1 w-full" onscroll="checkCarouselEnd()">
                 <!-- Renderizado dinámico -->
               </div>
 
@@ -187,9 +187,9 @@
           </div>
         </div>
 
-        <!-- 2. Carrusel Principal -->
+        <!-- 2. Carrusel Principal (Foto Grande Interactiva) -->
         <div class="order-1 lg:order-1 lg:col-span-5 flex justify-center">
-          <div id="hero-main-photo-container" class="relative w-full max-w-md aspect-[4/5] bg-charcoal border border-[#E9D4C3] shadow-lg overflow-hidden group cursor-pointer" title="Haz clic para ver descripción completa">
+          <div id="hero-main-photo-container" class="relative w-full max-w-md aspect-[4/5] bg-charcoal border border-[#E9D4C3] shadow-lg overflow-hidden group cursor-pointer" onclick="openHeroActiveDetail()" title="Haz clic para ver la descripción">
           </div>
         </div>
 
@@ -320,25 +320,16 @@
 
   <!-- LIGHTBOX MODAL CON NAVEGACIÓN Y CONTADOR -->
   <div id="lightbox-modal" class="fixed inset-0 z-[70] hidden bg-black/95 flex items-center justify-center p-4 select-none" onclick="closeLightbox()">
-    <!-- Botón Cerrar -->
     <button onclick="closeLightbox()" class="absolute top-5 right-5 sm:top-6 sm:right-6 w-11 h-11 sm:w-12 sm:h-12 bg-white/10 hover:bg-white text-white hover:text-charcoal border border-white/20 flex items-center justify-center text-xl sm:text-2xl font-light transition-colors z-[80] cursor-pointer rounded-lg shadow-2xl" title="Cerrar (Esc)">
       ✕
     </button>
-
-    <!-- Flecha Anterior -->
     <button id="lightbox-prev-btn" onclick="prevLightboxImage(event)" class="hidden absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-14 sm:h-14 bg-white/10 hover:bg-white text-white hover:text-charcoal border border-white/20 rounded-lg flex items-center justify-center text-2xl sm:text-3xl transition-all z-[80] cursor-pointer shadow-2xl" title="Imagen anterior">
       ‹
     </button>
-
-    <!-- Imagen Principal -->
     <img id="lightbox-img" src="" alt="Vista completa" class="max-w-full max-h-[85vh] object-contain shadow-2xl transition-opacity duration-200" onclick="event.stopPropagation()" />
-
-    <!-- Flecha Siguiente -->
     <button id="lightbox-next-btn" onclick="nextLightboxImage(event)" class="hidden absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-14 sm:h-14 bg-white/10 hover:bg-white text-white hover:text-charcoal border border-white/20 rounded-lg flex items-center justify-center text-2xl sm:text-3xl transition-all z-[80] cursor-pointer shadow-2xl" title="Siguiente imagen">
       ›
     </button>
-
-    <!-- Indicador Contador (Ej: 1 / 3) -->
     <div id="lightbox-counter" class="hidden absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/15 backdrop-blur-md text-white border border-white/20 px-4 py-1.5 rounded-lg text-xs tracking-[0.2em] font-medium z-[80]" onclick="event.stopPropagation()">
       1 / 1
     </div>
@@ -632,6 +623,7 @@
     let currentUploadedImages = [];
     let currentHeroIndex = 0;
     let heroCarouselInterval = null;
+    let isHeroInitialized = false;
 
     let currentLightboxImages = [];
     let currentLightboxIndex = 0;
@@ -755,7 +747,7 @@
       if (featuredProducts.length === 0) {
         mainContainer.innerHTML = `
           <div class="relative w-full h-full min-h-[320px] flex items-center justify-center bg-charcoal">
-            <img src="https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=1000&q=90" class="w-full h-full object-cover opacity-90" />
+            <img src="https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=1000&q=90" loading="eager" class="w-full h-full object-cover opacity-90" />
             <div class="absolute bottom-3 left-3 bg-charcoal/80 text-white text-[9px] uppercase tracking-wider px-2.5 py-1">
               Sin productos activos en el Hero
             </div>
@@ -780,9 +772,10 @@
       if (currentHeroIndex >= featuredProducts.length) currentHeroIndex = 0;
       const activeProduct = featuredProducts[currentHeroIndex];
 
+      // Renderizado de la foto grande principal
       mainContainer.innerHTML = `
-        <div class="relative w-full h-full min-h-[340px] flex items-center justify-center bg-charcoal group cursor-pointer" onclick="openDetailModal('${activeProduct.id}')">
-          <img src="${activeProduct.images[0]}" alt="${activeProduct.name}" class="w-full h-full object-cover opacity-95 transition-transform duration-700 group-hover:scale-105" />
+        <div class="relative w-full h-full min-h-[340px] flex items-center justify-center bg-charcoal group">
+          <img src="${activeProduct.images[0]}" alt="${activeProduct.name}" loading="eager" class="w-full h-full object-cover opacity-95 transition-transform duration-700 group-hover:scale-105" />
           <div class="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent"></div>
           
           <button onclick="shareProduct('${activeProduct.id}', event)" class="absolute top-3 right-3 bg-white/90 hover:bg-white text-charcoal p-2 rounded-lg shadow-md transition-transform hover:scale-110 z-10 cursor-pointer" title="Compartir pieza">
@@ -811,55 +804,94 @@
         </div>
       `;
 
-      recuadrosContainer.innerHTML = featuredProducts.map((prod, idx) => {
-        const thumbImg = prod.images[0];
-        const isSelected = idx === currentHeroIndex;
-        const maxAllowed = Math.min(MAX_PER_ITEM, prod.stock);
-        const inCartItem = cart.find(c => c.id === prod.id);
-        const qtyInCart = inCartItem ? inCartItem.quantity : 0;
-        const isSoldOut = maxAllowed <= 0;
+      // Renderizamos el carrusel inferior (con bucle de retorno al principio al llegar al final)
+      if (!isHeroInitialized) {
+        recuadrosContainer.innerHTML = featuredProducts.map((prod, index) => {
+          const thumbImg = prod.images[0];
+          const maxAllowed = Math.min(MAX_PER_ITEM, prod.stock);
+          const inCartItem = cart.find(c => c.id === prod.id);
+          const qtyInCart = inCartItem ? inCartItem.quantity : 0;
+          const isSoldOut = maxAllowed <= 0;
 
-        return `
-          <div onclick="selectHeroProduct(${idx}, '${prod.id}')" class="group bg-white border ${isSelected ? 'border-accentOrange ring-1 ring-accentOrange' : 'border-[#E9D4C3] hover:border-accentOrange/60'} p-2.5 flex flex-col justify-between transition-all shadow-xs relative cursor-pointer shrink-0 w-[140px] sm:w-[155px]" title="Ver detalles de la pieza">
-            <button onclick="shareProduct('${prod.id}', event)" class="absolute top-3 right-3 bg-[#FAF8F5]/90 hover:bg-white text-charcoal p-1.5 rounded-lg shadow-sm transition-transform hover:scale-110 z-10 cursor-pointer" title="Compartir pieza">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-            </button>
-            <div class="relative aspect-square bg-[#FAF8F5] overflow-hidden mb-2">
-              <img src="${thumbImg}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            </div>
-            <div>
-              <h4 class="font-editorial text-xs sm:text-sm text-charcoal truncate font-medium group-hover:text-accentOrange">${prod.name}</h4>
-              <p class="text-xs font-semibold text-charcoal mt-0.5">$${Number(prod.price).toFixed(2)}</p>
-            </div>
-            <div class="mt-2 pt-2 border-t border-[#E9D4C3]/50 flex items-center justify-between gap-1">
-              <span class="text-[9px] uppercase tracking-wider text-stone truncate">${isSoldOut ? 'Sin cupo' : (qtyInCart > 0 ? `Encargo (${qtyInCart})` : `Máx. ${maxAllowed}`)}</span>
-              <button onclick="event.stopPropagation(); addToCart('${prod.id}')" ${isSoldOut ? 'disabled' : ''} class="px-2.5 py-1 text-[9px] uppercase tracking-wider rounded-lg transition-colors ${isSoldOut ? 'bg-[#E9D4C3] text-stone cursor-not-allowed' : 'bg-charcoal text-white hover:bg-stone cursor-pointer'}">
-                ${qtyInCart > 0 ? `(${qtyInCart})` : '+ Encargar'}
+          return `
+            <div onclick="selectHeroProductByIndex(${index})" class="group bg-white border border-[#E9D4C3] hover:border-accentOrange/60 p-2.5 flex flex-col justify-between transition-all shadow-xs relative cursor-pointer shrink-0 w-[140px] sm:w-[155px]" title="Mostrar en foto principal">
+              <button onclick="shareProduct('${prod.id}', event)" class="absolute top-3 right-3 bg-[#FAF8F5]/90 hover:bg-white text-charcoal p-1.5 rounded-lg shadow-sm transition-transform hover:scale-110 z-10 cursor-pointer" title="Compartir pieza">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
               </button>
+              <div class="relative aspect-square bg-[#FAF8F5] overflow-hidden mb-2">
+                <img src="${thumbImg}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              </div>
+              <div>
+                <h4 class="font-editorial text-xs sm:text-sm text-charcoal truncate font-medium group-hover:text-accentOrange">${prod.name}</h4>
+                <p class="text-xs font-semibold text-charcoal mt-0.5">$${Number(prod.price).toFixed(2)}</p>
+              </div>
+              <div class="mt-2 pt-2 border-t border-[#E9D4C3]/50 flex items-center justify-between gap-1">
+                <span class="text-[9px] uppercase tracking-wider text-stone truncate">${isSoldOut ? 'Sin cupo' : (qtyInCart > 0 ? `Encargo (${qtyInCart})` : `Máx. ${maxAllowed}`)}</span>
+                <button onclick="event.stopPropagation(); addToCart('${prod.id}')" ${isSoldOut ? 'disabled' : ''} class="px-2.5 py-1 text-[9px] uppercase tracking-wider rounded-lg transition-colors ${isSoldOut ? 'bg-[#E9D4C3] text-stone cursor-not-allowed' : 'bg-charcoal text-white hover:bg-stone cursor-pointer'}">
+                  ${qtyInCart > 0 ? `(${qtyInCart})` : '+ Encargar'}
+                </button>
+              </div>
             </div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+
+        isHeroInitialized = true;
+      }
 
       startHeroAutoPlay();
     }
 
-    function scrollHeroRecuadros(direction) {
+    // Función que detecta si llega al final del carrusel para regresar suavemente al inicio
+    function checkCarouselEnd() {
       const container = document.getElementById('hero-recuadros-list');
-      const scrollAmount = 160;
-      if (direction === 'left') {
-        container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-      } else {
-        container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      if (!container) return;
+
+      if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
       }
     }
 
-    function selectHeroProduct(index, productId) {
-      currentHeroIndex = index;
-      renderHero();
-      openDetailModal(productId);
+    function scrollHeroRecuadros(direction) {
+      const container = document.getElementById('hero-recuadros-list');
+      const scrollAmount = 200;
+      if (direction === 'left') {
+        if (container.scrollLeft <= 10) {
+          container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
+        } else {
+          container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        }
+      } else {
+        if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
+          container.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+      }
+    }
+
+    function selectHeroProductByIndex(index) {
+      let featuredProducts = products.filter(p => p.active !== false && p.heroFeatured && p.images && p.images.length > 0);
+      const heroWatches = featuredProducts.filter(p => p.category && p.category.toLowerCase().includes('reloj'));
+      const heroOthers = featuredProducts.filter(p => !p.category || !p.category.toLowerCase().includes('reloj'));
+      featuredProducts = [...heroWatches, ...heroOthers];
+
+      if (featuredProducts[index]) {
+        currentHeroIndex = index;
+        updateHeroMainDisplay(featuredProducts);
+      }
+    }
+
+    function openHeroActiveDetail() {
+      let featuredProducts = products.filter(p => p.active !== false && p.heroFeatured && p.images && p.images.length > 0);
+      const heroWatches = featuredProducts.filter(p => p.category && p.category.toLowerCase().includes('reloj'));
+      const heroOthers = featuredProducts.filter(p => !p.category || !p.category.toLowerCase().includes('reloj'));
+      featuredProducts = [...heroWatches, ...heroOthers];
+
+      if (featuredProducts[currentHeroIndex]) {
+        openDetailModal(featuredProducts[currentHeroIndex].id);
+      }
     }
 
     function nextHeroSlide(event) {
@@ -871,7 +903,7 @@
 
       if (featuredProducts.length <= 1) return;
       currentHeroIndex = (currentHeroIndex + 1) % featuredProducts.length;
-      renderHero();
+      updateHeroMainDisplay(featuredProducts);
     }
 
     function prevHeroSlide(event) {
@@ -883,16 +915,51 @@
 
       if (featuredProducts.length <= 1) return;
       currentHeroIndex = (currentHeroIndex - 1 + featuredProducts.length) % featuredProducts.length;
-      renderHero();
+      updateHeroMainDisplay(featuredProducts);
+    }
+
+    function updateHeroMainDisplay(featuredProducts) {
+      const mainContainer = document.getElementById('hero-main-photo-container');
+      if (!mainContainer) return;
+      const activeProduct = featuredProducts[currentHeroIndex];
+
+      mainContainer.innerHTML = `
+        <div class="relative w-full h-full min-h-[340px] flex items-center justify-center bg-charcoal group">
+          <img src="${activeProduct.images[0]}" alt="${activeProduct.name}" loading="eager" class="w-full h-full object-cover opacity-95 transition-transform duration-700 group-hover:scale-105" />
+          <div class="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent"></div>
+          
+          <button onclick="shareProduct('${activeProduct.id}', event)" class="absolute top-3 right-3 bg-white/90 hover:bg-white text-charcoal p-2 rounded-lg shadow-md transition-transform hover:scale-110 z-10 cursor-pointer" title="Compartir pieza">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+          </button>
+
+          <button onclick="prevHeroSlide(event)" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/70 text-white rounded-lg flex items-center justify-center text-sm transition-colors z-10 cursor-pointer">‹</button>
+          <button onclick="nextHeroSlide(event)" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/70 text-white rounded-lg flex items-center justify-center text-sm transition-colors z-10 cursor-pointer">›</button>
+          
+          <div class="absolute top-3 left-3 flex gap-1 z-10">
+            ${featuredProducts.map((_, idx) => `<span class="w-6 h-1 rounded-sm transition-colors ${idx === currentHeroIndex ? 'bg-accentOrange' : 'bg-white/40'}"></span>`).join('')}
+          </div>
+
+          <div class="absolute bottom-4 left-4 right-4 text-white flex items-end justify-between pointer-events-none">
+            <div>
+              <span class="bg-accentOrange text-white text-[9px] uppercase tracking-[0.2em] px-2.5 py-1 rounded-lg font-semibold shadow-sm">Entrega Inmediata</span>
+              <h3 class="font-editorial text-xl sm:text-2xl mt-1.5 leading-snug">${activeProduct.name}</h3>
+              <p class="text-xs font-semibold text-[#E9D4C3]">$${Number(activeProduct.price).toFixed(2)} USD</p>
+            </div>
+            <span class="text-[9px] uppercase tracking-widest bg-white/20 px-2.5 py-1 rounded-lg pointer-events-auto">Ver detalle ↗</span>
+          </div>
+        </div>
+      `;
     }
 
     function startHeroAutoPlay() {
       if (heroCarouselInterval) clearInterval(heroCarouselInterval);
       let featuredProducts = products.filter(p => p.active !== false && p.heroFeatured && p.images && p.images.length > 0);
-      if (featuredProducts.length > 3) {
+      if (featuredProducts.length > 1) {
         heroCarouselInterval = setInterval(() => {
           currentHeroIndex = (currentHeroIndex + 1) % featuredProducts.length;
-          renderHero();
+          updateHeroMainDisplay(featuredProducts);
         }, 5000);
       }
     }
@@ -1083,7 +1150,7 @@
             </button>
             <div>
               <div onclick="openDetailModal('${product.id}')" class="relative aspect-[4/5] bg-[#FAF8F5] overflow-hidden cursor-pointer">
-                <img src="${mainImage}" alt="${product.name}" class="product-card-img w-full h-full object-cover" />
+                <img src="${mainImage}" alt="${product.name}" loading="lazy" class="product-card-img w-full h-full object-cover" />
                 ${product.heroFeatured ? `<span class="absolute top-2.5 left-2.5 bg-accentOrange text-white text-[8px] sm:text-[9px] uppercase px-2.5 py-1 rounded-lg tracking-wider font-semibold shadow-xs">Entrega Inmediata</span>` : ''}
                 ${isSoldOut ? `<div class="absolute inset-0 bg-white/75 flex items-center justify-center"><span class="bg-charcoal text-white px-3 py-1 rounded-lg text-[9px] sm:text-[10px] uppercase tracking-[0.2em]">Agotado</span></div>` : ''}
               </div>
@@ -1116,13 +1183,13 @@
       document.getElementById('detail-content').innerHTML = `
         <div class="p-3 sm:p-6 bg-[#FAF8F5] flex flex-col justify-between">
           <div class="relative w-full h-[220px] sm:h-[380px] bg-white border border-[#E9D4C3] overflow-hidden mb-2 flex items-center justify-center p-2 cursor-zoom-in group shadow-xs" onclick="openLightboxForProduct('${product.id}')">
-            <img id="modal-main-img" data-index="0" src="${imagesList[0]}" class="max-h-full max-w-full object-contain" />
+            <img id="modal-main-img" data-index="0" src="${imagesList[0]}" loading="eager" class="max-h-full max-w-full object-contain" />
             <div class="absolute bottom-3 right-3 bg-white/90 text-charcoal text-[10px] uppercase tracking-wider px-3 py-1 rounded-lg flex items-center gap-1.5 opacity-90 group-hover:opacity-100 shadow-sm border border-[#E9D4C3]/60 pointer-events-none">
               <svg class="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607Z"></path></svg>
               + ampliar
             </div>
           </div>
-          ${imagesList.length > 1 ? `<div class="flex gap-1.5 overflow-x-auto pb-1">${imagesList.map((img, idx) => `<button onclick="changeDetailMainImage('${img}', ${idx})" class="w-12 h-12 sm:w-14 sm:h-14 border border-[#E9D4C3] hover:border-accentOrange shrink-0 bg-white cursor-pointer transition-colors overflow-hidden rounded-lg"><img src="${img}" class="w-full h-full object-cover"/></button>`).join('')}</div>` : ''}
+          ${imagesList.length > 1 ? `<div class="flex gap-1.5 overflow-x-auto pb-1">${imagesList.map((img, idx) => `<button onclick="changeDetailMainImage('${img}', ${idx})" class="w-12 h-12 sm:w-14 sm:h-14 border border-[#E9D4C3] hover:border-accentOrange shrink-0 bg-white cursor-pointer transition-colors overflow-hidden rounded-lg"><img src="${img}" loading="lazy" class="w-full h-full object-cover"/></button>`).join('')}</div>` : ''}
         </div>
 
         <div class="p-4 sm:p-8 flex flex-col justify-between space-y-3 sm:space-y-6">
@@ -1342,7 +1409,7 @@
         const subtotal = product.price * item.quantity;
         return `
           <div class="bg-[#FAF8F5] border border-[#E9D4C3] p-3.5 flex gap-3.5 items-center">
-            <img src="${product.images[0]}" class="w-16 h-20 object-cover bg-white shrink-0" />
+            <img src="${product.images[0]}" loading="lazy" class="w-16 h-20 object-cover bg-white shrink-0" />
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-start gap-2">
                 <h4 class="font-editorial text-base text-charcoal truncate">${product.name}</h4>
@@ -1538,7 +1605,7 @@
         }
       } catch (err) {
         console.error(err);
-        alert("Error de red al intentar conectar con GitHub.");
+        alert("Error de red al intentar conectar com GitHub.");
       }
     }
 
@@ -1563,7 +1630,7 @@
       }
       container.innerHTML = currentUploadedImages.map((img, idx) => `
         <div class="relative w-14 h-14 border border-[#E9D4C3] bg-white shrink-0 overflow-hidden shadow-xs">
-          <img src="${img}" class="w-full h-full object-cover" />
+          <img src="${img}" loading="lazy" class="w-full h-full object-cover" />
           <button type="button" onclick="currentUploadedImages.splice(${idx},1);updateAdminImagesPreview();" class="absolute top-1 right-1 bg-charcoal text-white w-4 h-4 rounded-lg text-[9px] flex items-center justify-center">✕</button>
         </div>
       `).join('');
@@ -1665,7 +1732,7 @@
         return `
           <div class="bg-[#FAF8F5] border border-[#E9D4C3] p-3 flex items-center justify-between gap-3 shadow-xs transition-opacity ${isActive ? 'opacity-100' : 'opacity-40 bg-gray-100'}">
             <div class="flex items-center gap-3 min-w-0">
-              <img src="${p.images[0]}" class="w-12 h-14 object-cover bg-white shrink-0" />
+              <img src="${p.images[0]}" loading="lazy" class="w-12 h-14 object-cover bg-white shrink-0" />
               <div class="min-w-0">
                 <p class="font-editorial text-base text-charcoal truncate flex items-center gap-1.5">
                   ${p.name} ${p.heroFeatured ? '⭐' : ''}
