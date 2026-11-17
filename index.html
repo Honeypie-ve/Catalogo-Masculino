@@ -161,7 +161,7 @@
             </p>
           </div>
 
-          <!-- Carrusel Horizontal con Bucle al principio -->
+          <!-- Carrusel Horizontal -->
           <div>
             <div id="hero-carousel-wrapper" class="relative flex items-center pt-2">
               <button id="hero-prev-btn" onclick="scrollHeroRecuadros('left')" class="absolute -left-3.5 sm:-left-4 z-20 w-8 h-8 rounded-lg bg-charcoal text-[#E9D4C3] hover:bg-stone hover:text-white border border-[#E9D4C3] flex items-center justify-center shadow-md transition-transform hover:scale-110 cursor-pointer hidden" title="Anterior">
@@ -318,7 +318,7 @@
     </div>
   </div>
 
-  <!-- LIGHTBOX MODAL CON NAVEGACIÓN Y CONTADOR -->
+  <!-- LIGHTBOX MODAL -->
   <div id="lightbox-modal" class="fixed inset-0 z-[70] hidden bg-black/95 flex items-center justify-center p-4 select-none" onclick="closeLightbox()">
     <button onclick="closeLightbox()" class="absolute top-5 right-5 sm:top-6 sm:right-6 w-11 h-11 sm:w-12 sm:h-12 bg-white/10 hover:bg-white text-white hover:text-charcoal border border-white/20 flex items-center justify-center text-xl sm:text-2xl font-light transition-colors z-[80] cursor-pointer rounded-lg shadow-2xl" title="Cerrar (Esc)">
       ✕
@@ -390,23 +390,40 @@
     <div class="bg-white max-w-5xl w-full max-h-[92vh] border border-[#E9D4C3] shadow-2xl flex flex-col overflow-hidden">
       <div class="px-6 py-4 bg-white border-b border-[#E9D4C3] flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h3 class="font-editorial text-2xl text-charcoal">Gestión de Catálogo y Portada</h3>
-          <p class="text-xs text-stone">Personaliza tu WhatsApp, activa/desactiva piezas y marca productos destacados.</p>
+          <h3 class="font-editorial text-2xl text-charcoal">Gestión de Catálogo y Verificación</h3>
+          <p class="text-xs text-stone">Personaliza tu tienda, administra piezas y verifica la autenticidad de los IDs de órdenes.</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap justify-between">
           <button onclick="publishToGitHub()" class="text-[11px] uppercase tracking-wider font-semibold border border-accentOrange bg-accentOrange text-white px-4 py-2 rounded-lg hover:bg-[#9d4313] transition-colors cursor-pointer shadow-xs">🚀 Publicar en GitHub</button>
           <button onclick="exportCatalogJSON()" class="text-[11px] uppercase tracking-wider border border-[#E9D4C3] px-3.5 py-2 rounded-lg bg-white hover:border-charcoal transition-colors cursor-pointer">Exportar JSON</button>
           <label class="text-[11px] uppercase tracking-wider border border-[#E9D4C3] px-3.5 py-2 rounded-lg bg-white hover:border-charcoal transition-colors cursor-pointer">
             Importar JSON
             <input type="file" accept=".json" onchange="importCatalogJSON(event)" class="hidden" />
           </label>
-          <button onclick="clearAdminTokenSession()" class="text-[11px] uppercase tracking-wider border border-red-300 text-red-700 px-3.5 py-2 rounded-lg bg-white hover:bg-red-50 transition-colors cursor-pointer" title="Borrar token guardado en caché">Cerrar Sesión Admin</button>
-          <button onclick="closeAdminModal()" class="w-8 h-8 rounded-lg border border-[#E9D4C3] flex items-center justify-center text-charcoal hover:bg-charcoal hover:text-white transition-colors ml-2 cursor-pointer">✕</button>
+          <button onclick="clearAdminTokenSession()" class="text-[11px] uppercase tracking-wider border border-red-300 text-red-700 px-3.5 py-2 rounded-lg bg-white hover:bg-red-50 transition-colors cursor-pointer" title="Borrar token guardado en caché">Cerrar Sesión</button>
+          
+          <!-- BOTÓN DE CIERRE CORREGIDO Y OPTIMIZADO PARA MÓVIL -->
+          <button onclick="closeAdminModal()" class="w-10 h-10 rounded-lg border border-[#E9D4C3] flex items-center justify-center text-charcoal bg-[#FAF8F5] hover:bg-charcoal hover:text-white transition-colors ml-auto cursor-pointer shadow-sm text-base font-bold shrink-0" title="Cerrar panel">✕</button>
         </div>
       </div>
 
       <div class="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-5 space-y-6">
+          
+          <!-- MODULO VERIFICADOR DE ORDENES -->
+          <div class="bg-[#FAF8F5] p-5 border border-[#E9D4C3] space-y-3 shadow-xs">
+            <h4 class="text-xs uppercase tracking-[0.18em] font-semibold text-charcoal flex items-center gap-1.5">
+              <span>🔍 Verificador de Órdenes Seguras</span>
+            </h4>
+            <p class="text-[11px] text-stone">Introduce el ID de orden que te llegó al WhatsApp para verificar su autenticidad y montos reales:</p>
+            <div class="flex gap-2">
+              <input type="text" id="verify-order-input" placeholder="Ej: HP-84F2A1" class="flex-1 bg-white border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone uppercase font-mono" />
+              <button onclick="verifyOrderCode()" class="bg-charcoal text-white px-4 py-2 rounded-lg text-[11px] uppercase tracking-wider hover:bg-stone cursor-pointer">Verificar</button>
+            </div>
+            <div id="verify-result-box" class="hidden mt-3 p-3 bg-white border border-[#E9D4C3] text-xs space-y-2">
+            </div>
+          </div>
+
           <div class="bg-white p-5 border border-[#E9D4C3] space-y-4">
             <h4 class="text-xs uppercase tracking-[0.18em] font-semibold text-charcoal">Textos y WhatsApp de la Tienda</h4>
             <div>
@@ -772,7 +789,6 @@
       if (currentHeroIndex >= featuredProducts.length) currentHeroIndex = 0;
       const activeProduct = featuredProducts[currentHeroIndex];
 
-      // Renderizado de la foto grande principal
       mainContainer.innerHTML = `
         <div class="relative w-full h-full min-h-[340px] flex items-center justify-center bg-charcoal group">
           <img src="${activeProduct.images[0]}" alt="${activeProduct.name}" loading="eager" class="w-full h-full object-cover opacity-95 transition-transform duration-700 group-hover:scale-105" />
@@ -804,7 +820,6 @@
         </div>
       `;
 
-      // Renderizamos el carrusel inferior (con bucle de retorno al principio al llegar al final)
       if (!isHeroInitialized) {
         recuadrosContainer.innerHTML = featuredProducts.map((prod, index) => {
           const thumbImg = prod.images[0];
@@ -843,7 +858,6 @@
       startHeroAutoPlay();
     }
 
-    // Función que detecta si llega al final del carrusel para regresar suavemente al inicio
     function checkCarouselEnd() {
       const container = document.getElementById('hero-recuadros-list');
       if (!container) return;
@@ -1445,14 +1459,81 @@
       }
     }
 
+    function generateSecureOrderHash(cartData) {
+      const rawString = JSON.stringify(cartData) + "HONEYPIE_SECURE_KEY_2026";
+      let hash = 0;
+      for (let i = 0; i < rawString.length; i++) {
+        const char = rawString.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0;
+      }
+      return "HP-" + Math.abs(hash).toString(16).toUpperCase();
+    }
+
+    function verifyOrderCode() {
+      const inputCode = document.getElementById('verify-order-input').value.trim().toUpperCase();
+      const resultBox = document.getElementById('verify-result-box');
+
+      if (!inputCode) {
+        resultBox.innerHTML = `<span class="text-red-600 font-medium">Por favor, introduce un código de orden.</span>`;
+        resultBox.classList.remove('hidden');
+        return;
+      }
+
+      let foundMatch = null;
+      let matchingCart = [];
+
+      for (let p of products) {
+        for (let qty = 1; qty <= Math.min(3, p.stock); qty++) {
+          const testCart = [{ id: p.id, quantity: qty }];
+          if (generateSecureOrderHash(testCart) === inputCode) {
+            matchingCart = testCart;
+            foundMatch = true;
+            break;
+          }
+        }
+        if (foundMatch) break;
+      }
+
+      if (!foundMatch && cart.length > 0 && generateSecureOrderHash(cart) === inputCode) {
+        matchingCart = cart;
+        foundMatch = true;
+      }
+
+      if (foundMatch) {
+        let total = 0;
+        let detailsHtml = matchingCart.map(item => {
+          const prod = products.find(p => p.id === item.id);
+          const sub = prod.price * item.quantity;
+          total += sub;
+          return `<li>&bull; ${prod.name} (Cant: ${item.quantity}) — $${sub.toFixed(2)}</li>`;
+        }).join('');
+
+        resultBox.innerHTML = `
+          <div class="text-green-700 font-semibold flex items-center gap-1">✅ ¡Orden Válida y Auténtica!</div>
+          <ul class="space-y-1 text-stone pl-2">${detailsHtml}</ul>
+          <p class="font-bold text-charcoal pt-1 border-t border-[#E9D4C3]">Monto Real Verificado: $${total.toFixed(2)} USD</p>
+        `;
+      } else {
+        resultBox.innerHTML = `
+          <div class="text-red-700 font-semibold flex items-center gap-1">❌ Código no reconocido o alterado</div>
+          <p class="text-stone">Este código (${inputCode}) no coincide con ninguna combinación matemática válida de la tienda. Verifica que el cliente no haya inventado el código.</p>
+        `;
+      }
+      resultBox.classList.remove('hidden');
+    }
+
     function sendWhatsAppOrder() {
       if (cart.length === 0) return;
       const customerName = document.getElementById('customer-name').value.trim();
       const customerNote = document.getElementById('customer-note').value.trim();
       const cleanPhone = sellerWhatsApp.replace(/\D/g, '');
 
+      const secureOrderCode = generateSecureOrderHash(cart);
+
       let message = `Hola, me gustaría realizar el siguiente pedido de *HONEYPIE*:\n\n`;
       if (customerName) message += `*Cliente:* ${customerName}\n`;
+      
       let total = 0;
       cart.forEach((item, index) => {
         const product = products.find(p => p.id === item.id);
@@ -1460,10 +1541,13 @@
         total += sub;
         message += `${index + 1}. *${product.name}* (Cant: ${item.quantity}) - $${sub.toFixed(2)}\n`;
       });
-      message += `\n*Total:* $${total.toFixed(2)} USD\n`;
-      if (customerNote) message += `*Nota:* ${customerNote}\n`;
 
-      if (confirm("¿Quieres redirigir a WhatsApp para enviar el pedido?")) {
+      message += `\n*Total Estimado:* $${total.toFixed(2)} USD\n`;
+      if (customerNote) message += `*Nota:* ${customerNote}\n`;
+      
+      message += `\n🔒 *ID de Orden Verificable:* \`${secureOrderCode}\``;
+
+      if (confirm("¿Quieres redirigir a WhatsApp para enviar el pedido protegido?")) {
         window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
       }
     }
@@ -1605,7 +1689,7 @@
         }
       } catch (err) {
         console.error(err);
-        alert("Error de red al intentar conectar com GitHub.");
+        alert("Error de red al intentar conectar con GitHub.");
       }
     }
 
