@@ -90,6 +90,23 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #invoice-print-area, #invoice-print-area * {
+        visibility: visible;
+      }
+      #invoice-print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        background: white;
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-accentOrange selection:text-white pb-20 sm:pb-0">
@@ -161,7 +178,7 @@
             </p>
           </div>
 
-          <!-- Carrusel Horizontal -->
+          <!-- Carrusel Horizontal Infinito Real -->
           <div>
             <div id="hero-carousel-wrapper" class="relative flex items-center pt-2">
               <button id="hero-prev-btn" onclick="scrollHeroRecuadros('left')" class="absolute -left-3.5 sm:-left-4 z-20 w-8 h-8 rounded-lg bg-charcoal text-[#E9D4C3] hover:bg-stone hover:text-white border border-[#E9D4C3] flex items-center justify-center shadow-md transition-transform hover:scale-110 cursor-pointer hidden" title="Anterior">
@@ -170,8 +187,8 @@
                 </svg>
               </button>
 
-              <div id="hero-recuadros-list" class="flex gap-3 overflow-x-auto no-scrollbar scroll-smooth px-1 py-1 w-full" onscroll="checkCarouselEnd()">
-                <!-- Renderizado dinámico -->
+              <div id="hero-recuadros-list" class="flex gap-3 overflow-x-auto no-scrollbar scroll-smooth px-1 py-1 w-full" onscroll="handleInfiniteCarouselScroll(this)">
+                <!-- Renderizado dinámico con duplicado para looping infinito -->
               </div>
 
               <button id="hero-next-btn" onclick="scrollHeroRecuadros('right')" class="absolute -right-3.5 sm:-right-4 z-20 w-8 h-8 rounded-lg bg-charcoal text-[#E9D4C3] hover:bg-stone hover:text-white border border-[#E9D4C3] flex items-center justify-center shadow-md transition-transform hover:scale-110 cursor-pointer hidden" title="Siguiente">
@@ -318,7 +335,7 @@
     </div>
   </div>
 
-  <!-- LIGHTBOX MODAL -->
+  <!-- LIGHTBOX MODAL (CON SOPORTE DE GESTOS SWIPE TÁCTILES) -->
   <div id="lightbox-modal" class="fixed inset-0 z-[70] hidden bg-black/95 flex items-center justify-center p-4 select-none" onclick="closeLightbox()">
     <button onclick="closeLightbox()" class="absolute top-5 right-5 sm:top-6 sm:right-6 w-11 h-11 sm:w-12 sm:h-12 bg-white/10 hover:bg-white text-white hover:text-charcoal border border-white/20 flex items-center justify-center text-xl sm:text-2xl font-light transition-colors z-[80] cursor-pointer rounded-lg shadow-2xl" title="Cerrar (Esc)">
       ✕
@@ -386,51 +403,55 @@
   </aside>
 
   <!-- ADMIN MODAL -->
-  <div id="admin-modal" class="fixed inset-0 z-50 hidden bg-charcoal/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
-    <div class="bg-white max-w-5xl w-full max-h-[92vh] border border-[#E9D4C3] shadow-2xl flex flex-col overflow-hidden">
-      <div class="px-6 py-4 bg-white border-b border-[#E9D4C3] flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h3 class="font-editorial text-2xl text-charcoal">Gestión de Catálogo y Verificación</h3>
-          <p class="text-xs text-stone">Personaliza tu tienda, administra piezas y verifica la autenticidad de los IDs de órdenes.</p>
+  <div id="admin-modal" class="fixed inset-0 z-50 hidden bg-charcoal/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-6">
+    <div class="bg-white max-w-5xl w-full max-h-[95vh] sm:max-h-[92vh] border border-[#E9D4C3] shadow-2xl flex flex-col overflow-hidden rounded-xl">
+      
+      <!-- HEADER DEL ADMIN MODAL -->
+      <div class="px-4 sm:px-6 py-4 bg-white border-b border-[#E9D4C3] flex items-center justify-between gap-3 shrink-0">
+        <div class="min-w-0">
+          <h3 class="font-editorial text-xl sm:text-2xl text-charcoal truncate">Gestión y Facturación Pro</h3>
+          <p class="text-[11px] sm:text-xs text-stone truncate">Administra piezas, valida órdenes y emite facturas online.</p>
         </div>
-        <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap justify-between">
-          <button onclick="publishToGitHub()" class="text-[11px] uppercase tracking-wider font-semibold border border-accentOrange bg-accentOrange text-white px-4 py-2 rounded-lg hover:bg-[#9d4313] transition-colors cursor-pointer shadow-xs">🚀 Publicar en GitHub</button>
-          <button onclick="exportCatalogJSON()" class="text-[11px] uppercase tracking-wider border border-[#E9D4C3] px-3.5 py-2 rounded-lg bg-white hover:border-charcoal transition-colors cursor-pointer">Exportar JSON</button>
-          <label class="text-[11px] uppercase tracking-wider border border-[#E9D4C3] px-3.5 py-2 rounded-lg bg-white hover:border-charcoal transition-colors cursor-pointer">
-            Importar JSON
-            <input type="file" accept=".json" onchange="importCatalogJSON(event)" class="hidden" />
-          </label>
-          <button onclick="clearAdminTokenSession()" class="text-[11px] uppercase tracking-wider border border-red-300 text-red-700 px-3.5 py-2 rounded-lg bg-white hover:bg-red-50 transition-colors cursor-pointer" title="Borrar token guardado en caché">Cerrar Sesión</button>
-          
-          <!-- BOTÓN DE CIERRE CORREGIDO Y OPTIMIZADO PARA MÓVIL -->
-          <button onclick="closeAdminModal()" class="w-10 h-10 rounded-lg border border-[#E9D4C3] flex items-center justify-center text-charcoal bg-[#FAF8F5] hover:bg-charcoal hover:text-white transition-colors ml-auto cursor-pointer shadow-sm text-base font-bold shrink-0" title="Cerrar panel">✕</button>
-        </div>
+        <button onclick="closeAdminModal()" class="w-10 h-10 rounded-lg border border-[#E9D4C3] flex items-center justify-center text-charcoal bg-[#FAF8F5] hover:bg-charcoal hover:text-white transition-colors cursor-pointer shadow-sm text-base font-bold shrink-0" title="Cerrar panel">✕</button>
       </div>
 
-      <div class="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- BOTONERA SUPERIOR ADAPTABLE A MÓVIL -->
+      <div class="px-4 sm:px-6 py-3 bg-[#FAF8F5] border-b border-[#E9D4C3] flex flex-wrap items-center gap-2 shrink-0">
+        <button onclick="publishToGitHub()" class="text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold border border-accentOrange bg-accentOrange text-white px-3.5 py-2 rounded-lg hover:bg-[#9d4313] transition-colors cursor-pointer shadow-xs">🚀 GitHub</button>
+        <button onclick="exportCatalogJSON()" class="text-[10px] sm:text-[11px] uppercase tracking-wider border border-[#E9D4C3] px-3 py-2 rounded-lg bg-white hover:border-charcoal transition-colors cursor-pointer">Exportar JSON</button>
+        <label class="text-[10px] sm:text-[11px] uppercase tracking-wider border border-[#E9D4C3] px-3 py-2 rounded-lg bg-white hover:border-charcoal transition-colors cursor-pointer">
+          Importar JSON
+          <input type="file" accept=".json" onchange="importCatalogJSON(event)" class="hidden" />
+        </label>
+        <button onclick="openInvoiceGeneratorModal()" class="text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold border border-stone bg-stone text-white px-3.5 py-2 rounded-lg hover:bg-charcoal transition-colors cursor-pointer ml-auto">🧾 Generar Factura Pro</button>
+        <button onclick="clearAdminTokenSession()" class="text-[10px] sm:text-[11px] uppercase tracking-wider border border-red-300 text-red-700 px-3 py-2 rounded-lg bg-white hover:bg-red-50 transition-colors cursor-pointer">Cerrar Sesión</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
         <div class="lg:col-span-5 space-y-6">
           
           <!-- MODULO VERIFICADOR DE ORDENES -->
-          <div class="bg-[#FAF8F5] p-5 border border-[#E9D4C3] space-y-3 shadow-xs">
-            <h4 class="text-xs uppercase tracking-[0.18em] font-semibold text-charcoal flex items-center gap-1.5">
-              <span>🔍 Verificador de Órdenes Seguras</span>
+          <div class="bg-[#FAF8F5] p-4 sm:p-5 border border-[#E9D4C3] space-y-3 shadow-xs rounded-lg">
+            <h4 class="text-xs uppercase tracking-[0.18em] font-semibold text-charcoal flex items-center justify-between">
+              <span>🔍 Verificador de Órdenes</span>
+              <button onclick="quickCopyOrderInput()" class="text-[10px] text-stone hover:text-charcoal uppercase tracking-wider underline cursor-pointer">Copiar ID rápido</button>
             </h4>
-            <p class="text-[11px] text-stone">Introduce el ID de orden que te llegó al WhatsApp para verificar su autenticidad y montos reales:</p>
+            <p class="text-[11px] text-stone">Introduce el ID de orden que te llegó al WhatsApp para verificar su autenticidad:</p>
             <div class="flex gap-2">
-              <input type="text" id="verify-order-input" placeholder="Ej: HP-84F2A1" class="flex-1 bg-white border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone uppercase font-mono" />
-              <button onclick="verifyOrderCode()" class="bg-charcoal text-white px-4 py-2 rounded-lg text-[11px] uppercase tracking-wider hover:bg-stone cursor-pointer">Verificar</button>
+              <input type="text" id="verify-order-input" placeholder="Ej: HP-84F2A1" class="flex-1 bg-white border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone uppercase font-mono rounded-lg" />
+              <button onclick="verifyOrderCode()" class="bg-charcoal text-white px-4 py-2 rounded-lg text-[11px] uppercase tracking-wider hover:bg-stone cursor-pointer shrink-0">Verificar</button>
             </div>
-            <div id="verify-result-box" class="hidden mt-3 p-3 bg-white border border-[#E9D4C3] text-xs space-y-2">
+            <div id="verify-result-box" class="hidden mt-3 p-3 bg-white border border-[#E9D4C3] text-xs space-y-2 rounded-lg">
             </div>
           </div>
 
-          <div class="bg-white p-5 border border-[#E9D4C3] space-y-4">
+          <div class="bg-white p-4 sm:p-5 border border-[#E9D4C3] space-y-4 rounded-lg shadow-xs">
             <h4 class="text-xs uppercase tracking-[0.18em] font-semibold text-charcoal">Textos y WhatsApp de la Tienda</h4>
             <div>
               <label class="block text-[11px] text-stone mb-1">Número de WhatsApp (sin +)</label>
               <div class="flex gap-2">
-                <input type="text" id="admin-whatsapp" placeholder="Ej: 584121234567" class="flex-1 bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone" />
-                <button onclick="saveWhatsAppSetting()" class="bg-charcoal text-white px-4 py-2 rounded-lg text-[11px] uppercase tracking-wider hover:bg-stone cursor-pointer">Guardar</button>
+                <input type="text" id="admin-whatsapp" placeholder="Ej: 584121234567" class="flex-1 bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone rounded-lg" />
+                <button onclick="saveWhatsAppSetting()" class="bg-charcoal text-white px-4 py-2 rounded-lg text-[11px] uppercase tracking-wider hover:bg-stone cursor-pointer shrink-0">Guardar</button>
               </div>
             </div>
 
@@ -440,17 +461,17 @@
               <h5 class="text-xs uppercase tracking-wider font-semibold text-charcoal">Títulos del Hero (Portada)</h5>
               <div>
                 <label class="block text-[10px] uppercase text-stone mb-1">Título Principal:</label>
-                <input type="text" id="admin-hero-title" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone" />
+                <input type="text" id="admin-hero-title" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone rounded-lg" />
               </div>
               <div>
                 <label class="block text-[10px] uppercase text-stone mb-1">Subtítulo:</label>
-                <textarea id="admin-hero-subtitle" rows="2" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone"></textarea>
+                <textarea id="admin-hero-subtitle" rows="2" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone rounded-lg"></textarea>
               </div>
               <button onclick="saveHeroSettings()" class="w-full bg-charcoal text-white py-2.5 rounded-lg text-[11px] uppercase tracking-wider hover:bg-stone cursor-pointer">Actualizar Textos</button>
             </div>
           </div>
 
-          <form id="product-form" onsubmit="handleProductSubmit(event)" class="bg-white p-5 border border-[#E9D4C3] space-y-4">
+          <form id="product-form" onsubmit="handleProductSubmit(event)" class="bg-white p-4 sm:p-5 border border-[#E9D4C3] space-y-4 rounded-lg shadow-xs">
             <div class="flex items-center justify-between border-b border-[#E9D4C3] pb-3">
               <h4 id="form-title" class="text-xs uppercase tracking-[0.18em] font-semibold text-charcoal">Agregar Nueva Pieza</h4>
               <button type="button" id="cancel-edit-btn" onclick="resetProductForm()" class="hidden text-[11px] text-stone underline cursor-pointer">Cancelar</button>
@@ -460,12 +481,12 @@
 
             <div>
               <label class="block text-[11px] uppercase tracking-wider text-stone mb-1">Nombre del Artículo *</label>
-              <input type="text" id="prod-name" required class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone" />
+              <input type="text" id="prod-name" required class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone rounded-lg" />
             </div>
 
             <div>
               <label class="block text-[11px] uppercase tracking-wider text-stone mb-1">Categoría *</label>
-              <select id="prod-category" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone cursor-pointer">
+              <select id="prod-category" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone cursor-pointer rounded-lg">
                 <option value="Collares">Collares</option>
                 <option value="Relojes: Acero Inoxidable">Relojes: Acero Inoxidable</option>
                 <option value="Relojes: Casio Originales">Relojes: Casio Originales</option>
@@ -481,27 +502,27 @@
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-[11px] uppercase tracking-wider text-stone mb-1">Precio ($ USD) *</label>
-                <input type="number" id="prod-price" required min="1" step="0.01" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone" />
+                <input type="number" id="prod-price" required min="1" step="0.01" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone rounded-lg" />
               </div>
               <div>
                 <label class="block text-[11px] uppercase tracking-wider text-stone mb-1">Límite Encargo *</label>
-                <input type="number" id="prod-stock" required min="0" max="3" value="3" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone" />
+                <input type="number" id="prod-stock" required min="0" max="3" value="3" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone rounded-lg" />
               </div>
             </div>
 
-            <div class="flex items-center gap-2.5 bg-[#FAF8F5] p-3 border border-[#E9D4C3]">
+            <div class="flex items-center gap-2.5 bg-[#FAF8F5] p-3 border border-[#E9D4C3] rounded-lg">
               <input type="checkbox" id="prod-hero-featured" class="w-4 h-4 text-stone focus:ring-stone border-[#E9D4C3] cursor-pointer" />
               <label for="prod-hero-featured" class="text-xs font-medium text-charcoal cursor-pointer">🌟 Mostrar en el Hero (portada)</label>
             </div>
 
             <div>
               <label class="block text-[11px] uppercase tracking-wider text-stone mb-1">Descripción *</label>
-              <textarea id="prod-desc" required rows="3" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone"></textarea>
+              <textarea id="prod-desc" required rows="3" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-stone rounded-lg"></textarea>
             </div>
 
             <div class="space-y-3">
               <label class="block text-[11px] uppercase tracking-wider text-stone font-semibold">Fotografías del Producto</label>
-              <div class="border border-dashed border-stone/60 bg-[#FAF8F5] p-3 text-center">
+              <div class="border border-dashed border-stone/60 bg-[#FAF8F5] p-3 text-center rounded-lg">
                 <label class="cursor-pointer block">
                   <span class="text-xs text-charcoal font-medium block">Agregar fotos desde dispositivo</span>
                   <input type="file" id="prod-multi-files" accept="image/*" multiple onchange="handleMultipleImagesUpload(event)" class="hidden" />
@@ -509,7 +530,7 @@
               </div>
               <div>
                 <label class="block text-[10px] uppercase text-stone mb-1">O enlaces de imágenes separados por coma (https://...):</label>
-                <input type="text" id="prod-images-urls" placeholder="https://img1.jpg, https://img2.jpg" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-1.5 text-[11px] text-charcoal focus:outline-none focus:border-stone" />
+                <input type="text" id="prod-images-urls" placeholder="https://img1.jpg, https://img2.jpg" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-1.5 text-[11px] text-charcoal focus:outline-none focus:border-stone rounded-lg" />
               </div>
               <div id="admin-images-preview" class="flex gap-2 overflow-x-auto py-1">
                 <span class="text-[10px] text-stone">Sin fotos cargadas</span>
@@ -527,6 +548,121 @@
           </div>
 
           <div id="admin-product-list" class="space-y-2.5 max-h-[65vh] overflow-y-auto pr-1">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVOICE GENERATOR / VIEWER MODAL -->
+  <div id="invoice-modal" class="fixed inset-0 z-[90] hidden bg-charcoal/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-white max-w-3xl w-full max-h-[95vh] border border-[#E9D4C3] shadow-2xl flex flex-col overflow-hidden rounded-xl">
+      <div class="px-6 py-4 bg-charcoal text-white flex items-center justify-between shrink-0">
+        <div>
+          <h3 class="font-editorial text-xl">Generador de Factura Pro</h3>
+          <p class="text-[10px] text-[#E9D4C3] tracking-widest uppercase">Honeypie &bull; Facturación Inteligente</p>
+        </div>
+        <button onclick="closeInvoiceModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white hover:text-charcoal flex items-center justify-center text-white transition-colors cursor-pointer">✕</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-[#FAF8F5]">
+        <!-- Configuración de Factura -->
+        <div id="invoice-form-section" class="bg-white p-5 border border-[#E9D4C3] space-y-4 rounded-lg shadow-xs">
+          
+          <div class="bg-[#FAF8F5] p-3.5 border border-[#E9D4C3] rounded-lg space-y-2">
+            <label class="block text-[10px] uppercase font-semibold text-charcoal">⚡ Cargar productos pegando el ID de orden de WhatsApp:</label>
+            <div class="flex gap-2">
+              <input type="text" id="inv-lookup-id" placeholder="Ej: HP-84F2A1" class="flex-1 bg-white border border-[#E9D4C3] px-3 py-1.5 text-xs text-charcoal uppercase font-mono rounded focus:outline-none" />
+              <button type="button" onclick="loadOrderIntoInvoice()" class="bg-charcoal text-white px-4 py-1.5 rounded text-[10px] uppercase tracking-wider hover:bg-stone cursor-pointer">Cargar Orden</button>
+            </div>
+            <p class="text-[10px] text-stone">Al introducir un código válido, cargará automáticamente los productos de esa orden para emitir la factura.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div>
+              <label class="block text-[10px] uppercase text-stone mb-1">Nombre del Cliente *</label>
+              <input type="text" id="inv-client-name" placeholder="Ej: Carlos Mendoza" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-[10px] uppercase text-stone mb-1">Nota o Método de Pago *</label>
+              <input type="text" id="inv-client-note" placeholder="Ej: Pago Móvil / Envío MRW" class="w-full bg-[#FAF8F5] border border-[#E9D4C3] px-3.5 py-2 text-xs text-charcoal focus:outline-none rounded-lg" />
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-[10px] uppercase text-stone font-semibold">Artículos de la Factura</label>
+              <button type="button" onclick="addInvoiceItemRow()" class="text-[10px] uppercase tracking-wider text-accentOrange font-bold underline cursor-pointer">+ Agregar artículo vacío</button>
+            </div>
+            <div id="invoice-items-rows" class="space-y-2">
+              <!-- Filas dinámicas -->
+            </div>
+          </div>
+
+          <button onclick="generateOnlineInvoice()" class="w-full bg-charcoal hover:bg-stone text-white py-3 rounded-lg text-xs uppercase tracking-[0.18em] font-medium transition-colors cursor-pointer">Emitir y Previsualizar Factura</button>
+        </div>
+
+        <!-- Vista Previa de la Factura -->
+        <div id="invoice-preview-section" class="hidden space-y-4">
+          <div id="invoice-print-area" class="bg-white border-2 border-charcoal p-8 space-y-6 shadow-md text-charcoal">
+            <div class="flex justify-between items-start border-b-2 border-charcoal pb-6">
+              <div>
+                <h2 class="font-editorial text-3xl font-bold tracking-widest leading-none">HONEYPIE</h2>
+                <p class="text-[9px] uppercase tracking-[0.25em] text-stone mt-1">Catálogo Masculino &bull; Comprobante de Venta</p>
+              </div>
+              <div class="text-right text-xs text-stone space-y-0.5">
+                <p class="font-bold text-charcoal" id="inv-view-code">Factura #HP-0000</p>
+                <p id="inv-view-date">Fecha: 00/00/2026</p>
+                <p class="text-[10px] italic">Tasa BCV Oficial</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 text-xs bg-[#FAF8F5] p-4 border border-[#E9D4C3]">
+              <div>
+                <span class="text-[10px] uppercase text-stone block font-semibold">Cliente:</span>
+                <p id="inv-view-client" class="font-medium text-charcoal text-sm">-</p>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase text-stone block font-semibold">Condición / Envío:</span>
+                <p id="inv-view-note" class="text-charcoal">-</p>
+              </div>
+            </div>
+
+            <div>
+              <table class="w-full text-xs text-left">
+                <thead>
+                  <tr class="border-b border-charcoal text-stone uppercase tracking-wider text-[10px]">
+                    <th class="py-2">Pieza / Artículo</th>
+                    <th class="py-2 text-center">Cant.</th>
+                    <th class="py-2 text-right">Precio Unit.</th>
+                    <th class="py-2 text-right">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody id="inv-view-table-body" class="divide-y divide-[#E9D4C3]">
+                  <!-- Filas inyectadas -->
+                </tbody>
+              </table>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t-2 border-charcoal">
+              <div class="w-64 space-y-2 text-xs">
+                <div class="flex justify-between font-bold text-sm text-charcoal pt-1 border-t border-charcoal">
+                  <span>Total Final:</span>
+                  <span id="inv-view-total">$0.00 USD</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-8 text-center text-[10px] text-stone border-t border-[#E9D4C3]">
+              <p>¡Gracias por tu compra en Honeypie!</p>
+              <p class="mt-0.5">Este documento digital valida los artículos y montos acordados.</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <button onclick="printInvoice()" class="flex-1 bg-charcoal hover:bg-stone text-white py-3 rounded-lg text-xs uppercase tracking-wider font-medium cursor-pointer">🖨️ Imprimir / Guardar PDF</button>
+            <button onclick="shareInvoiceWhatsApp()" class="flex-1 bg-whatsapp hover:bg-whatsappDark text-white py-3 rounded-lg text-xs uppercase tracking-wider font-medium cursor-pointer">💬 Compartir Factura por WhatsApp</button>
+            <button onclick="resetInvoiceForm()" class="px-4 py-3 border border-[#E9D4C3] bg-white text-stone text-xs uppercase rounded-lg hover:border-charcoal cursor-pointer">Crear Otra</button>
           </div>
         </div>
       </div>
@@ -644,9 +780,13 @@
 
     let currentLightboxImages = [];
     let currentLightboxIndex = 0;
+    let touchstartX = 0;
+    let touchendX = 0;
 
     let logoClicks = 0;
     let logoClickTimer = null;
+
+    let activeInvoiceData = null;
 
     async function initCatalog() {
       try {
@@ -668,6 +808,7 @@
       }
 
       checkSharedCartParam();
+      checkSharedInvoiceParam();
 
       renderHero();
       populatePriceSelects();
@@ -675,6 +816,7 @@
       applyFilters();
       updateCartUI();
       checkURLHash();
+      initLightboxSwipeGestures();
     }
 
     function checkSharedCartParam() {
@@ -695,6 +837,25 @@
           }
         } catch (e) {
           console.log("Error al decodificar el carrito compartido:", e);
+        }
+      }
+    }
+
+    function checkSharedInvoiceParam() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const invParam = urlParams.get('invoice');
+      if (invParam) {
+        try {
+          const invData = JSON.parse(decodeURIComponent(atob(invParam)));
+          if (invData && invData.items) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setTimeout(() => {
+              openInvoiceGeneratorModal();
+              loadInvoiceIntoView(invData);
+            }, 400);
+          }
+        } catch (e) {
+          console.log("Error al decodificar factura compartida:", e);
         }
       }
     }
@@ -821,15 +982,19 @@
       `;
 
       if (!isHeroInitialized) {
-        recuadrosContainer.innerHTML = featuredProducts.map((prod, index) => {
+        // DUPLICAMOS LOS PRODUCTOS TRES VECES PARA LOGRAR UN EFECTO DE LOOP INFINITO REAL Y SUAVE
+        const tripleProducts = [...featuredProducts, ...featuredProducts, ...featuredProducts];
+        
+        recuadrosContainer.innerHTML = tripleProducts.map((prod, index) => {
           const thumbImg = prod.images[0];
           const maxAllowed = Math.min(MAX_PER_ITEM, prod.stock);
           const inCartItem = cart.find(c => c.id === prod.id);
           const qtyInCart = inCartItem ? inCartItem.quantity : 0;
           const isSoldOut = maxAllowed <= 0;
+          const originalIndex = index % featuredProducts.length;
 
           return `
-            <div onclick="selectHeroProductByIndex(${index})" class="group bg-white border border-[#E9D4C3] hover:border-accentOrange/60 p-2.5 flex flex-col justify-between transition-all shadow-xs relative cursor-pointer shrink-0 w-[140px] sm:w-[155px]" title="Mostrar en foto principal">
+            <div onclick="selectHeroProductByIndex(${originalIndex})" class="group bg-white border border-[#E9D4C3] hover:border-accentOrange/60 p-2.5 flex flex-col justify-between transition-all shadow-xs relative cursor-pointer shrink-0 w-[140px] sm:w-[155px]" title="Mostrar en foto principal">
               <button onclick="shareProduct('${prod.id}', event)" class="absolute top-3 right-3 bg-[#FAF8F5]/90 hover:bg-white text-charcoal p-1.5 rounded-lg shadow-sm transition-transform hover:scale-110 z-10 cursor-pointer" title="Compartir pieza">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -853,46 +1018,46 @@
         }).join('');
 
         isHeroInitialized = true;
+        
+        // Situar el scroll exactamente en el bloque del medio para permitir desplazamiento infinito en ambos sentidos
+        setTimeout(() => {
+          if (recuadrosContainer.scrollWidth > 0) {
+            recuadrosContainer.scrollLeft = recuadrosContainer.scrollWidth / 3;
+          }
+        }, 50);
       }
 
       startHeroAutoPlay();
     }
 
-    function checkCarouselEnd() {
-      const container = document.getElementById('hero-recuadros-list');
-      if (!container) return;
+    // Lógica para mantener el carrusel infinito sin topes bruscos
+    function handleInfiniteCarouselScroll(el) {
+      const maxScroll = el.scrollWidth;
+      const third = maxScroll / 3;
 
-      if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
-        container.scrollTo({ left: 0, behavior: 'smooth' });
+      if (el.scrollLeft < third * 0.5) {
+        el.scrollLeft += third;
+      } else if (el.scrollLeft > third * 2.5) {
+        el.scrollLeft -= third;
       }
     }
 
     function scrollHeroRecuadros(direction) {
       const container = document.getElementById('hero-recuadros-list');
-      const scrollAmount = 200;
-      if (direction === 'left') {
-        if (container.scrollLeft <= 10) {
-          container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
-        } else {
-          container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-        }
-      } else {
-        if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
-          container.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-        }
+      const scrollAmount = 220;
+      if (container) {
+        container.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
       }
     }
 
-    function selectHeroProductByIndex(index) {
+    function selectHeroProductByIndex(originalIndex) {
       let featuredProducts = products.filter(p => p.active !== false && p.heroFeatured && p.images && p.images.length > 0);
       const heroWatches = featuredProducts.filter(p => p.category && p.category.toLowerCase().includes('reloj'));
       const heroOthers = featuredProducts.filter(p => !p.category || !p.category.toLowerCase().includes('reloj'));
       featuredProducts = [...heroWatches, ...heroOthers];
 
-      if (featuredProducts[index]) {
-        currentHeroIndex = index;
+      if (featuredProducts[originalIndex]) {
+        currentHeroIndex = originalIndex;
         updateHeroMainDisplay(featuredProducts);
       }
     }
@@ -1308,6 +1473,33 @@
       document.getElementById('lightbox-modal').classList.add('hidden');
     }
 
+    // GESTOS TÁCTILES SWIPE PARA EL LIGHTBOX
+    function initLightboxSwipeGestures() {
+      const lightboxModal = document.getElementById('lightbox-modal');
+      if (!lightboxModal) return;
+
+      lightboxModal.addEventListener('touchstart', e => {
+        touchstartX = e.changedTouches[0].screenX;
+      }, {passive: true});
+
+      lightboxModal.addEventListener('touchend', e => {
+        touchendX = e.changedTouches[0].screenX;
+        handleSwipeGesture();
+      }, {passive: true});
+    }
+
+    function handleSwipeGesture() {
+      const threshold = 50; // Mínimo de píxeles para reconocer el gesto
+      if (touchendX < touchstartX - threshold) {
+        // Deslizar a la izquierda -> Siguiente imagen
+        nextLightboxImage();
+      }
+      if (touchendX > touchstartX + threshold) {
+        // Deslizar a la derecha -> Imagen anterior
+        prevLightboxImage();
+      }
+    }
+
     document.addEventListener('keydown', (e) => {
       const lightbox = document.getElementById('lightbox-modal');
       if (!lightbox.classList.contains('hidden')) {
@@ -1470,6 +1662,17 @@
       return "HP-" + Math.abs(hash).toString(16).toUpperCase();
     }
 
+    function quickCopyOrderInput() {
+      const input = document.getElementById('verify-order-input');
+      if (!input.value.trim()) {
+        showToast('Introduce o pega un código primero');
+        return;
+      }
+      navigator.clipboard.writeText(input.value.trim()).then(() => {
+        showToast('¡Código copiado al portapapeles!');
+      });
+    }
+
     function verifyOrderCode() {
       const inputCode = document.getElementById('verify-order-input').value.trim().toUpperCase();
       const resultBox = document.getElementById('verify-result-box');
@@ -1517,7 +1720,7 @@
       } else {
         resultBox.innerHTML = `
           <div class="text-red-700 font-semibold flex items-center gap-1">❌ Código no reconocido o alterado</div>
-          <p class="text-stone">Este código (${inputCode}) no coincide con ninguna combinación matemática válida de la tienda. Verifica que el cliente no haya inventado el código.</p>
+          <p class="text-stone">Este código (${inputCode}) no coincide con ninguna combinación matemática válida de la tienda.</p>
         `;
       }
       resultBox.classList.remove('hidden');
@@ -1545,7 +1748,7 @@
       message += `\n*Total Estimado:* $${total.toFixed(2)} USD\n`;
       if (customerNote) message += `*Nota:* ${customerNote}\n`;
       
-      message += `\n🔒 *ID de Orden Verificable:* \`${secureOrderCode}\``;
+      message += `\n🔒 *ID de Orden:* \`${secureOrderCode}\``;
 
       if (confirm("¿Quieres redirigir a WhatsApp para enviar el pedido protegido?")) {
         window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
@@ -1571,6 +1774,213 @@
           prompt("Copia este enlace para compartir tu carrito:", shareableUrl);
         });
       }
+    }
+
+    function openInvoiceGeneratorModal() {
+      resetInvoiceForm();
+      const container = document.getElementById('invoice-items-rows');
+      container.innerHTML = '';
+      
+      if (cart.length > 0) {
+        cart.forEach(c => {
+          const prod = products.find(p => p.id === c.id);
+          if (prod) addInvoiceItemRow(prod.name, c.quantity, prod.price);
+        });
+      } else {
+        addInvoiceItemRow();
+      }
+
+      document.getElementById('invoice-modal').classList.remove('hidden');
+    }
+
+    function closeInvoiceModal() {
+      document.getElementById('invoice-modal').classList.add('hidden');
+    }
+
+    function addInvoiceItemRow(selectedName = '', qty = 1, price = 0) {
+      const container = document.getElementById('invoice-items-rows');
+      const rowId = 'inv-row-' + Date.now() + Math.random().toString(36).substring(2,5);
+      
+      let productOptionsHtml = `<option value="">-- Seleccionar producto de la tienda --</option>`;
+      products.forEach(p => {
+        const isSel = p.name === selectedName ? 'selected' : '';
+        productOptionsHtml += `<option value="${p.name}" data-price="${p.price}" ${isSel}>${p.name} ($${p.price})</option>`;
+      });
+
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'flex flex-col sm:flex-row items-center gap-2 bg-white p-2.5 border border-[#E9D4C3] rounded-lg';
+      rowDiv.id = rowId;
+      rowDiv.innerHTML = `
+        <select onchange="onInvoiceProductSelect(this)" class="inv-product-select w-full sm:flex-1 bg-[#FAF8F5] border border-[#E9D4C3] px-2.5 py-1.5 text-xs text-charcoal focus:outline-none rounded cursor-pointer">
+          ${productOptionsHtml}
+        </select>
+        <input type="text" placeholder="Nombre de la pieza" value="${selectedName}" class="inv-item-name w-full sm:w-48 bg-[#FAF8F5] border border-[#E9D4C3] px-3 py-1.5 text-xs text-charcoal focus:outline-none rounded" />
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-between">
+          <input type="number" placeholder="Cant" min="1" value="${qty}" class="inv-item-qty w-16 bg-[#FAF8F5] border border-[#E9D4C3] px-2 py-1.5 text-xs text-charcoal text-center focus:outline-none rounded" />
+          <input type="number" placeholder="Precio $" min="0" step="0.01" value="${price}" class="inv-item-price w-24 bg-[#FAF8F5] border border-[#E9D4C3] px-2 py-1.5 text-xs text-charcoal text-right focus:outline-none rounded" />
+          <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-stone hover:text-red-700 text-xs px-2 font-bold">✕</button>
+        </div>
+      `;
+      container.appendChild(rowDiv);
+    }
+
+    function onInvoiceProductSelect(selectEl) {
+      const selectedOption = selectEl.options[selectEl.selectedIndex];
+      const prodName = selectedOption.value;
+      const prodPrice = selectedOption.getAttribute('data-price');
+      
+      const row = selectEl.closest('div.flex');
+      if (row && prodName) {
+        const nameInput = row.querySelector('.inv-item-name');
+        const priceInput = row.querySelector('.inv-item-price');
+        if (nameInput) nameInput.value = prodName;
+        if (priceInput && prodPrice) priceInput.value = prodPrice;
+      }
+    }
+
+    function loadOrderIntoInvoice() {
+      const codeInput = document.getElementById('inv-lookup-id').value.trim().toUpperCase();
+      if (!codeInput) {
+        showToast('Introduce un ID de orden');
+        return;
+      }
+
+      let matchingCart = null;
+      for (let p of products) {
+        for (let qty = 1; qty <= Math.min(3, p.stock); qty++) {
+          const testCart = [{ id: p.id, quantity: qty }];
+          if (generateSecureOrderHash(testCart) === codeInput) {
+            matchingCart = testCart;
+            break;
+          }
+        }
+        if (matchingCart) break;
+      }
+
+      if (!matchingCart && cart.length > 0 && generateSecureOrderHash(cart) === codeInput) {
+        matchingCart = cart;
+      }
+
+      if (matchingCart) {
+        const container = document.getElementById('invoice-items-rows');
+        container.innerHTML = '';
+        matchingCart.forEach(item => {
+          const prod = products.find(p => p.id === item.id);
+          if (prod) {
+            addInvoiceItemRow(prod.name, item.quantity, prod.price);
+          }
+        });
+        showToast('¡Productos de la orden cargados con éxito!');
+      } else {
+        showToast('Código de orden no encontrado');
+      }
+    }
+
+    function generateOnlineInvoice() {
+      const clientName = document.getElementById('inv-client-name').value.trim() || 'Cliente General';
+      const clientNote = document.getElementById('inv-client-note').value.trim() || 'Pago Directo Acordado';
+      
+      const rowElements = document.querySelectorAll('#invoice-items-rows > div');
+      if (rowElements.length === 0) {
+        showToast('Agrega al menos un artículo a la factura');
+        return;
+      }
+
+      let items = [];
+      let total = 0;
+
+      rowElements.forEach(row => {
+        const name = row.querySelector('.inv-item-name').value.trim() || 'Artículo';
+        const qty = parseInt(row.querySelector('.inv-item-qty').value, 10) || 1;
+        const price = parseFloat(row.querySelector('.inv-item-price').value) || 0;
+        const subtotal = qty * price;
+        total += subtotal;
+        items.push({ name, qty, price, subtotal });
+      });
+
+      const invoiceCode = "HP-INV-" + Math.floor(100000 + Math.random() * 900000);
+      const currentDate = new Date().toLocaleDateString('es-VE');
+
+      activeInvoiceData = {
+        code: invoiceCode,
+        date: currentDate,
+        client: clientName,
+        note: clientNote,
+        items: items,
+        total: total
+      };
+
+      document.getElementById('inv-view-code').textContent = `Factura #${invoiceCode}`;
+      document.getElementById('inv-view-date').textContent = `Fecha: ${currentDate}`;
+      document.getElementById('inv-view-client').textContent = clientName;
+      document.getElementById('inv-view-note').textContent = clientNote;
+
+      const tbody = document.getElementById('inv-view-table-body');
+      tbody.innerHTML = items.map(i => `
+        <tr>
+          <td class="py-2.5 font-medium text-charcoal">${i.name}</td>
+          <td class="py-2.5 text-center">${i.qty}</td>
+          <td class="py-2.5 text-right">$${i.price.toFixed(2)}</td>
+          <td class="py-2.5 text-right font-semibold">$${i.subtotal.toFixed(2)}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('inv-view-total').textContent = `$${total.toFixed(2)} USD`;
+
+      document.getElementById('invoice-form-section').classList.add('hidden');
+      document.getElementById('invoice-preview-section').classList.remove('hidden');
+      showToast('¡Factura generada con éxito!');
+    }
+
+    function loadInvoiceIntoView(invData) {
+      document.getElementById('inv-view-code').textContent = `Factura #${invData.code}`;
+      document.getElementById('inv-view-date').textContent = `Fecha: ${invData.date}`;
+      document.getElementById('inv-view-client').textContent = invData.client;
+      document.getElementById('inv-view-note').textContent = invData.note;
+
+      const tbody = document.getElementById('inv-view-table-body');
+      tbody.innerHTML = invData.items.map(i => `
+        <tr>
+          <td class="py-2.5 font-medium text-charcoal">${i.name}</td>
+          <td class="py-2.5 text-center">${i.qty}</td>
+          <td class="py-2.5 text-right">$${i.price.toFixed(2)}</td>
+          <td class="py-2.5 text-right font-semibold">$${i.subtotal.toFixed(2)}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('inv-view-total').textContent = `$${invData.total.toFixed(2)} USD`;
+      activeInvoiceData = invData;
+
+      document.getElementById('invoice-form-section').classList.add('hidden');
+      document.getElementById('invoice-preview-section').classList.remove('hidden');
+    }
+
+    function resetInvoiceForm() {
+      document.getElementById('inv-lookup-id').value = '';
+      document.getElementById('inv-client-name').value = '';
+      document.getElementById('inv-client-note').value = '';
+      document.getElementById('invoice-preview-section').classList.add('hidden');
+      document.getElementById('invoice-form-section').classList.remove('hidden');
+      activeInvoiceData = null;
+    }
+
+    function printInvoice() {
+      window.print();
+    }
+
+    function shareInvoiceWhatsApp() {
+      if (!activeInvoiceData) return;
+      const cleanPhone = sellerWhatsApp.replace(/\D/g, '');
+      const encoded = btoa(encodeURIComponent(JSON.stringify(activeInvoiceData)));
+      const invoiceUrl = `${window.location.origin + window.location.pathname}?invoice=${encoded}`;
+
+      let text = `🧾 *FACTURA DIGITAL HONEYPIE*\n`;
+      text += `*Nº:* ${activeInvoiceData.code}\n`;
+      text += `*Cliente:* ${activeInvoiceData.client}\n`;
+      text += `*Total:* $${activeInvoiceData.total.toFixed(2)} USD\n\n`;
+      text += `Puedes ver tu comprobante oficial en línea aquí:\n${invoiceUrl}`;
+
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
     function requestAdminAccess() {
